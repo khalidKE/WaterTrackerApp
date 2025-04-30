@@ -7,20 +7,24 @@ class WaterProgress extends StatefulWidget {
   final bool isExpanded;
 
   const WaterProgress({
-    super.key,
+    Key? key,
     required this.progress,
     required this.goal,
     this.isExpanded = false,
-  });
+  }) : super(key: key);
 
   @override
-  State<WaterProgress> createState() => _WaterProgressState();
+  State<WaterProgress> createState() => WaterProgressState();
 }
 
-class _WaterProgressState extends State<WaterProgress>
+class WaterProgressState extends State<WaterProgress>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
-  late Animation<double> _progressAnimation;
+  late Animation<double> _waveAnimation;
+  late Animation<double> _fillAnimation;
+
+  double _currentFillPercentage = 0.0;
+  bool _isAnimating = false;
 
   @override
   void initState() {
@@ -28,27 +32,50 @@ class _WaterProgressState extends State<WaterProgress>
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
-    )..forward();
+    );
 
-    _progressAnimation = Tween<double>(
-      begin: 0,
-      end: widget.progress / widget.goal,
-    ).animate(
+    _waveAnimation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.linear,
+    );
+
+    _fillAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
+
+    _animationController.repeat();
+
+    // Initialize fill percentage
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _updateFillPercentage();
+    });
   }
 
   @override
   void didUpdateWidget(WaterProgress oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.progress != widget.progress) {
-      _progressAnimation = Tween<double>(
-        begin: oldWidget.progress / widget.goal,
-        end: widget.progress / widget.goal,
-      ).animate(
-        CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
-      );
-      _animationController.forward(from: 0);
+      _updateFillPercentage();
+    }
+  }
+
+  void _updateFillPercentage() {
+    final percentage = (widget.progress / widget.goal).clamp(0.0, 1.0);
+    setState(() {
+      _currentFillPercentage = percentage;
+    });
+  }
+
+  void triggerWaveAnimation() {
+    if (!_isAnimating) {
+      _isAnimating = true;
+      _animationController.stop();
+      _animationController.duration = const Duration(milliseconds: 800);
+      _animationController.forward(from: 0.0).then((_) {
+        _animationController.duration = const Duration(seconds: 2);
+        _animationController.repeat();
+        _isAnimating = false;
+      });
     }
   }
 
@@ -63,44 +90,44 @@ class _WaterProgressState extends State<WaterProgress>
     final percentage = (widget.progress / widget.goal).clamp(0.0, 1.0);
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
+    // Fixed size for the circle regardless of expanded state
+    const circleSize = 150.0;
+
     return AnimatedBuilder(
       animation: _animationController,
       builder: (context, child) {
-        return Stack(
-          alignment: Alignment.center,
-          children: [
-            // Circular progress indicator
-            SizedBox(
-              height:
-                  widget.isExpanded
-                      ? 200
-                      : 150, // Increased sizes for better visibility
-              width: widget.isExpanded ? 200 : 150,
-              child: CustomPaint(
-                painter: WaveProgressPainter(
-                  animationValue: _animationController.value,
-                  percentage: _progressAnimation.value.clamp(0.0, 1.0),
-                  color: Theme.of(context).colorScheme.primary,
-                  backgroundColor:
-                      isDarkMode
-                          ? Colors.grey.shade800
-                          : Theme.of(
-                            context,
-                          ).colorScheme.primary.withOpacity(0.1),
+        return Center(
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // Circular progress indicator with fixed size
+              SizedBox(
+                height: circleSize,
+                width: circleSize,
+                child: CustomPaint(
+                  painter: WaveProgressPainter(
+                    animationValue: _waveAnimation.value,
+                    percentage: _currentFillPercentage,
+                    color: Theme.of(context).colorScheme.primary,
+                    backgroundColor:
+                        isDarkMode
+                            ? Colors.grey.shade800
+                            : Theme.of(
+                              context,
+                            ).colorScheme.primary.withOpacity(0.1),
+                    isAnimating: _isAnimating,
+                  ),
                 ),
               ),
-            ),
 
-            // Percentage text
-            SingleChildScrollView(
-              child: Column(
+              // Percentage text
+              Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
                     '${(percentage * 100).toInt()}%',
                     style: TextStyle(
-                      fontSize:
-                          widget.isExpanded ? 28 : 25, // Adjusted font size
+                      fontSize: 28,
                       fontWeight: FontWeight.bold,
                       color:
                           percentage > 0.5 && !isDarkMode ? Colors.white : null,
@@ -109,8 +136,7 @@ class _WaterProgressState extends State<WaterProgress>
                   Text(
                     '${widget.progress} / ${widget.goal} ml',
                     style: TextStyle(
-                      fontSize:
-                          widget.isExpanded ? 10 : 12, // Adjusted font size
+                      fontSize: 14,
                       color:
                           percentage > 0.5 && !isDarkMode
                               ? Colors.white.withOpacity(0.9)
@@ -119,8 +145,8 @@ class _WaterProgressState extends State<WaterProgress>
                   ),
                 ],
               ),
-            ),
-          ],
+            ],
+          ),
         );
       },
     );
@@ -132,12 +158,14 @@ class WaveProgressPainter extends CustomPainter {
   final double percentage;
   final Color color;
   final Color backgroundColor;
+  final bool isAnimating;
 
   WaveProgressPainter({
     required this.animationValue,
     required this.percentage,
     required this.color,
     required this.backgroundColor,
+    this.isAnimating = false,
   });
 
   @override
@@ -160,7 +188,7 @@ class WaveProgressPainter extends CustomPainter {
         Paint()
           ..color = color.withOpacity(0.3)
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 3; // Slightly thicker border for larger circle
+          ..strokeWidth = 2;
 
     canvas.drawCircle(center, radius, borderPaint);
 
@@ -173,7 +201,7 @@ class WaveProgressPainter extends CustomPainter {
     canvas.clipPath(clipPath);
 
     // Calculate wave parameters
-    final waveHeight = radius * 0.15; // Adjusted for larger circle
+    final waveHeight = isAnimating ? radius * 0.15 : radius * 0.1;
     final waveCount = 2.0;
     final baseHeight = height - percentage * height;
 
@@ -204,6 +232,35 @@ class WaveProgressPainter extends CustomPainter {
     wavePath.close();
 
     canvas.drawPath(wavePath, wavePaint);
+
+    // Add a second wave for more realistic effect
+    final wave2Paint =
+        Paint()
+          ..color = color.withOpacity(0.5)
+          ..style = PaintingStyle.fill;
+
+    final wave2Path = Path();
+    wave2Path.moveTo(0, baseHeight);
+
+    for (double i = 0; i <= width; i++) {
+      final dx = i;
+      final dy =
+          baseHeight +
+          math.sin(
+                (i / width * waveCount * 2 * math.pi) +
+                    (animationValue * 2 * math.pi + math.pi / 2),
+              ) *
+              waveHeight *
+              0.7;
+      wave2Path.lineTo(dx, dy);
+    }
+
+    // Complete the path
+    wave2Path.lineTo(width, height);
+    wave2Path.lineTo(0, height);
+    wave2Path.close();
+
+    canvas.drawPath(wave2Path, wave2Paint);
   }
 
   @override
@@ -211,6 +268,7 @@ class WaveProgressPainter extends CustomPainter {
     return oldDelegate.animationValue != animationValue ||
         oldDelegate.percentage != percentage ||
         oldDelegate.color != color ||
-        oldDelegate.backgroundColor != backgroundColor;
+        oldDelegate.backgroundColor != backgroundColor ||
+        oldDelegate.isAnimating != isAnimating;
   }
 }

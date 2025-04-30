@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:water_tracker/widgets/add_water_dialog.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../models/drink.dart';
+import '../utils/constants.dart';
+import '../widgets/add_water_dialog.dart';
 
 class RecentDrinks extends StatelessWidget {
   final List<Drink> drinks;
 
-  const RecentDrinks({super.key, required this.drinks});
+  const RecentDrinks({Key? key, required this.drinks}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -14,27 +16,30 @@ class RecentDrinks extends StatelessWidget {
 
     if (drinks.isEmpty) {
       return Card(
-        elevation: 0,
+        elevation: isDarkMode ? 0 : 2,
+        shadowColor:
+            isDarkMode ? Colors.transparent : Colors.blue.withOpacity(0.1),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         color:
-            isDarkMode
-                ? Theme.of(context).colorScheme.surface
-                : Theme.of(context).colorScheme.primary.withOpacity(0.05),
+            isDarkMode ? Theme.of(context).colorScheme.surface : Colors.white,
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Center(
             child: Column(
               children: [
-                Image.asset('images/small_glass.png', height: 80),
+                Image.asset('images/empty_glass.png', height: 80),
                 const SizedBox(height: 16),
-                const Text(
+                Text(
                   'No drinks added today',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Tap the + button to add your first drink',
-                  style: TextStyle(
+                  style: GoogleFonts.poppins(
                     color: Theme.of(context).textTheme.bodySmall?.color,
                     fontSize: 14,
                   ),
@@ -55,6 +60,10 @@ class RecentDrinks extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                   ),
                 ),
               ],
@@ -65,12 +74,11 @@ class RecentDrinks extends StatelessWidget {
     }
 
     return Card(
-      elevation: 0,
+      elevation: isDarkMode ? 0 : 2,
+      shadowColor:
+          isDarkMode ? Colors.transparent : Colors.blue.withOpacity(0.1),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      color:
-          isDarkMode
-              ? Theme.of(context).colorScheme.surface
-              : Theme.of(context).colorScheme.primary.withOpacity(0.05),
+      color: isDarkMode ? Theme.of(context).colorScheme.surface : Colors.white,
       child: ListView.separated(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
@@ -82,9 +90,12 @@ class RecentDrinks extends StatelessWidget {
             leading: _getIconForDrinkType(drink.type),
             title: Text(
               _getDrinkTypeString(drink.type),
-              style: const TextStyle(fontWeight: FontWeight.bold),
+              style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
             ),
-            subtitle: Text(DateFormat('HH:mm').format(drink.timestamp)),
+            subtitle: Text(
+              DateFormat('HH:mm').format(drink.timestamp),
+              style: GoogleFonts.poppins(fontSize: 12),
+            ),
             trailing: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
@@ -93,7 +104,7 @@ class RecentDrinks extends StatelessWidget {
               ),
               child: Text(
                 '${drink.amount} ml',
-                style: TextStyle(
+                style: GoogleFonts.poppins(
                   fontWeight: FontWeight.bold,
                   color: Theme.of(context).colorScheme.primary,
                 ),

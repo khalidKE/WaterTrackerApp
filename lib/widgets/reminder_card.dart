@@ -4,110 +4,77 @@ import 'package:google_fonts/google_fonts.dart';
 import '../providers/water_provider.dart';
 import '../services/notification_service.dart';
 
-class ReminderCard extends StatefulWidget {
-  const ReminderCard({super.key});
-
-  @override
-  State<ReminderCard> createState() => _ReminderCardState();
-}
-
-class _ReminderCardState extends State<ReminderCard> {
-  bool showReminderOptions =
-      true; // Controls visibility of "Remind me in" section
+class ReminderCard extends StatelessWidget {
+  const ReminderCard({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Card(
-      elevation: 0,
+      elevation: isDarkMode ? 0 : 2,
+      shadowColor:
+          isDarkMode ? Colors.transparent : Colors.blue.withOpacity(0.1),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      color:
-          isDarkMode
-              ? Theme.of(context).colorScheme.surface
-              : Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+      color: isDarkMode ? Theme.of(context).colorScheme.surface : Colors.white,
       child: Padding(
         padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+        child: Consumer<WaterProvider>(
+          builder: (context, waterProvider, child) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.secondary.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    Icons.notifications_active,
-                    color: Theme.of(context).colorScheme.secondary,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  'Smart Reminders',
-                  style: GoogleFonts.poppins(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Consumer<WaterProvider>(
-              builder: (context, waterProvider, child) {
-                return SwitchListTile(
-                  title: const Text(
+                SwitchListTile(
+                  title: Text(
                     'Enable Reminders',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
                   ),
-                  subtitle: const Text(
+                  subtitle: Text(
                     'Get notifications to stay hydrated',
-                    style: TextStyle(fontSize: 12),
+                    style: GoogleFonts.poppins(fontSize: 12),
                   ),
                   value: waterProvider.remindersEnabled,
                   contentPadding: EdgeInsets.zero,
                   activeColor: Theme.of(context).colorScheme.secondary,
                   onChanged: (value) {
                     waterProvider.setRemindersEnabled(value);
-                    setState(() {
-                      showReminderOptions =
-                          value; // Show/hide options based on switch
-                    });
                     if (value) {
                       NotificationService().scheduleReminders();
                     } else {
                       NotificationService().cancelAllNotifications();
                     }
                   },
-                );
-              },
-            ),
-            if (showReminderOptions &&
-                Provider.of<WaterProvider>(context).remindersEnabled) ...[
-              const Divider(),
-              const Text(
-                'Remind me in:',
-                style: TextStyle(fontWeight: FontWeight.w500),
-              ),
-              const SizedBox(height: 12),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                physics: const BouncingScrollPhysics(),
-                child: Row(
-                  children: [
-                    _buildReminderChip(context, 10, 'minutes'),
-                    _buildReminderChip(context, 30, 'minutes'),
-                    _buildReminderChip(context, 1, 'hour'),
-                    _buildReminderChip(context, 2, 'hours'),
-                  ],
                 ),
-              ),
-            ],
-          ],
+                if (waterProvider.remindersEnabled) ...[
+                  const Divider(),
+                  const Text(
+                    'Remind me in:',
+                    style: TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                  const SizedBox(height: 12),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
+                    child: Row(
+                      children: [
+                        _buildReminderChip(context, 5, 'minutes'),
+                        _buildReminderChip(context, 10, 'minutes'),
+                        _buildReminderChip(context, 15, 'minutes'),
+                        _buildReminderChip(context, 20, 'minutes'),
+                        _buildReminderChip(context, 30, 'minutes'),
+                        _buildReminderChip(context, 1, 'hour'),
+                        _buildReminderChip(context, 2, 'hours'),
+                        _buildReminderChip(context, 4, 'hours'),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            );
+          },
         ),
       ),
     );
@@ -127,7 +94,7 @@ class _ReminderCardState extends State<ReminderCard> {
         label: Text('$value $unit'),
         backgroundColor:
             isDarkMode
-                ? Theme.of(context).colorScheme.surface
+                ? Theme.of(context).colorScheme.surface.withOpacity(0.8)
                 : Theme.of(context).colorScheme.secondary.withOpacity(0.1),
         labelStyle: TextStyle(
           color: Theme.of(context).colorScheme.secondary,
@@ -136,9 +103,7 @@ class _ReminderCardState extends State<ReminderCard> {
         onPressed: () {
           final minutes = unit == 'minutes' ? value : value * 60;
           NotificationService().scheduleReminderIn(minutes);
-          setState(() {
-            showReminderOptions = false; // Hide "Remind me in" section
-          });
+
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Reminder set for $value $unit from now'),

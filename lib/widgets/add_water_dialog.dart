@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../providers/water_provider.dart';
 import '../models/drink.dart';
+import '../utils/constants.dart';
 
 class AddWaterDialog extends StatefulWidget {
-  const AddWaterDialog({super.key});
+  const AddWaterDialog({Key? key}) : super(key: key);
 
   @override
   State<AddWaterDialog> createState() => _AddWaterDialogState();
@@ -44,9 +46,9 @@ class _AddWaterDialogState extends State<AddWaterDialog>
     return ScaleTransition(
       scale: _animation,
       child: AlertDialog(
-        title: const Text(
+        title: Text(
           'Add Drink',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
         ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         content: SizedBox(
@@ -55,9 +57,9 @@ class _AddWaterDialogState extends State<AddWaterDialog>
             mainAxisSize: MainAxisSize.min,
             children: [
               // Drink type selection
-              const Text(
+              Text(
                 'Select Drink Type',
-                style: TextStyle(fontWeight: FontWeight.w500),
+                style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 16),
               Row(
@@ -93,9 +95,9 @@ class _AddWaterDialogState extends State<AddWaterDialog>
               const SizedBox(height: 24),
 
               // Amount selection
-              const Text(
+              Text(
                 'Amount (ml)',
-                style: TextStyle(fontWeight: FontWeight.w500),
+                style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 16),
               Row(
@@ -129,7 +131,7 @@ class _AddWaterDialogState extends State<AddWaterDialog>
                     ),
                     child: Text(
                       '$_amount ml',
-                      style: const TextStyle(
+                      style: GoogleFonts.poppins(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
@@ -180,7 +182,7 @@ class _AddWaterDialogState extends State<AddWaterDialog>
             onPressed: () {
               Navigator.of(context).pop();
             },
-            child: const Text('Cancel'),
+            child: Text('Cancel', style: GoogleFonts.poppins()),
           ),
           FilledButton(
             onPressed: () {
@@ -202,7 +204,7 @@ class _AddWaterDialogState extends State<AddWaterDialog>
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child: const Text('Add'),
+            child: Text('Add', style: GoogleFonts.poppins()),
           ),
         ],
       ),
@@ -240,7 +242,7 @@ class _AddWaterDialogState extends State<AddWaterDialog>
             const SizedBox(height: 4),
             Text(
               label,
-              style: TextStyle(
+              style: GoogleFonts.poppins(
                 color: isSelected ? color : Colors.grey,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                 fontSize: 12,
