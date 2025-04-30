@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:water_tracker/providers/theme_provider.dart';
-import 'package:water_tracker/providers/water_provider.dart';
 import 'package:water_tracker/screens/home_screen.dart';
-import 'package:water_tracker/screens/profile_screen.dart';
-import 'package:water_tracker/screens/settings_screen.dart';
 import 'package:water_tracker/screens/statistics_screen.dart';
+import 'package:water_tracker/screens/settings_screen.dart';
+import 'package:water_tracker/screens/profile_screen.dart';
+import 'package:water_tracker/providers/water_provider.dart';
+import 'package:water_tracker/providers/theme_provider.dart';
 import 'package:water_tracker/services/notification_service.dart';
-
+import 'package:google_fonts/google_fonts.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -38,19 +38,43 @@ class MyApp extends StatelessWidget {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return MaterialApp(
-          title: 'Water Tracker',
+          title: 'Hydrate',
           debugShowCheckedModeBanner: false,
           theme: ThemeData(
-            primarySwatch: Colors.blue,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: const Color(0xFF2196F3),
+              secondary: const Color(0xFF03A9F4),
+            ),
             brightness: Brightness.light,
-            fontFamily: 'Poppins',
             useMaterial3: true,
+            textTheme: GoogleFonts.poppinsTextTheme(),
+            scaffoldBackgroundColor: Colors.white,
+            appBarTheme: const AppBarTheme(
+              backgroundColor: Colors.white,
+              elevation: 0,
+            ),
+            cardTheme: CardTheme(
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+            ),
           ),
           darkTheme: ThemeData(
-            primarySwatch: Colors.blue,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: const Color(0xFF2196F3),
+              secondary: const Color(0xFF03A9F4),
+              brightness: Brightness.dark,
+            ),
             brightness: Brightness.dark,
-            fontFamily: 'Poppins',
             useMaterial3: true,
+            textTheme: GoogleFonts.poppinsTextTheme(ThemeData.dark().textTheme),
+            cardTheme: CardTheme(
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+            ),
           ),
           themeMode:
               themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
@@ -89,6 +113,11 @@ class _MainScreenState extends State<MainScreen> {
             _selectedIndex = index;
           });
         },
+        elevation: 0,
+        backgroundColor:
+            Theme.of(context).brightness == Brightness.dark
+                ? Theme.of(context).scaffoldBackgroundColor
+                : Colors.white,
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.water_drop_outlined),
