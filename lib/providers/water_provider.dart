@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-import 'dart:math' as math;
 import 'package:water_tracker/models/drink.dart';
 
 class WaterProvider with ChangeNotifier {
@@ -80,11 +79,6 @@ class WaterProvider with ChangeNotifier {
     final now = DateTime.now();
     final List<Map<String, dynamic>> weekData = [];
 
-    // If we don't have real data, generate some sample data
-    if (_drinks.isEmpty) {
-      return _generateSampleWeekData();
-    }
-
     // Get the start of the week (Monday)
     final int currentWeekday = now.weekday;
     final startOfWeek = now.subtract(Duration(days: currentWeekday - 1));
@@ -109,11 +103,6 @@ class WaterProvider with ChangeNotifier {
   List<Map<String, dynamic>> getMonthlyData() {
     final now = DateTime.now();
     final List<Map<String, dynamic>> monthData = [];
-
-    // If we don't have real data, generate some sample data
-    if (_drinks.isEmpty) {
-      return _generateSampleMonthData();
-    }
 
     // Get the number of days in the current month
     final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
@@ -166,58 +155,17 @@ class WaterProvider with ChangeNotifier {
     }
   }
 
-  // Generate sample weekly data for demonstration
-  List<Map<String, dynamic>> _generateSampleWeekData() {
-    final random = math.Random();
-    final List<Map<String, dynamic>> weekData = [];
-
-    for (int i = 0; i < 7; i++) {
-      // Generate random amount between 1500 and 2500
-      final amount = 1500 + random.nextInt(1000);
-
-      weekData.add({
-        'day': _getWeekdayName(i + 1),
-        'amount': amount,
-        'goal': _dailyGoal,
-      });
-    }
-
-    return weekData;
-  }
-
-  // Generate sample monthly data for demonstration
-  List<Map<String, dynamic>> _generateSampleMonthData() {
-    final random = math.Random();
-    final List<Map<String, dynamic>> monthData = [];
-    final now = DateTime.now();
-    final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
-
-    for (int i = 1; i <= daysInMonth; i++) {
-      // Generate random amount between 1500 and 2500
-      final amount = 1500 + random.nextInt(1000);
-
-      monthData.add({'day': i, 'amount': amount, 'goal': _dailyGoal});
-    }
-
-    return monthData;
-  }
-
   // Data persistence
   Future<void> _loadData() async {
     final prefs = await SharedPreferences.getInstance();
 
     _dailyGoal = prefs.getInt('dailyGoal') ?? 2000;
-    _remindersEnabled = prefs.getBool('remindersEnabled') ?? true;
+    _remindersEnabled = prefs.getBool('remindersEnabled') ?? false;
     _unit = prefs.getString('unit') ?? 'ml';
 
     final drinksJson = prefs.getStringList('drinks') ?? [];
     _drinks =
         drinksJson.map((json) => Drink.fromJson(jsonDecode(json))).toList();
-
-    // If no drinks data, generate some sample data
-    if (_drinks.isEmpty) {
-      _generateSampleDrinks();
-    }
 
     notifyListeners();
   }
@@ -232,44 +180,5 @@ class WaterProvider with ChangeNotifier {
     final drinksJson =
         _drinks.map((drink) => jsonEncode(drink.toJson())).toList();
     await prefs.setStringList('drinks', drinksJson);
-  }
-
-  // Generate sample drinks data for demonstration
-  void _generateSampleDrinks() {
-    final random = math.Random();
-    final now = DateTime.now();
-
-    // Generate drinks for the past 30 days
-    for (int day = 0; day < 30; day++) {
-      final date = now.subtract(Duration(days: day));
-
-      // Generate 3-8 drinks per day
-      final drinksCount = 3 + random.nextInt(6);
-
-      for (int i = 0; i < drinksCount; i++) {
-        // Random hour between 8 and 22
-        final hour = 8 + random.nextInt(14);
-        final minute = random.nextInt(60);
-
-        final timestamp = DateTime(
-          date.year,
-          date.month,
-          date.day,
-          hour,
-          minute,
-        );
-
-        // Random drink type
-        final drinkType =
-            DrinkType.values[random.nextInt(DrinkType.values.length)];
-
-        // Random amount between 100 and 500
-        final amount = (1 + random.nextInt(5)) * 100;
-
-        _drinks.add(
-          Drink(type: drinkType, amount: amount, timestamp: timestamp),
-        );
-      }
-    }
   }
 }

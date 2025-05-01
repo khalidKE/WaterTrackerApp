@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../providers/water_provider.dart';
 
 class AchievementCalendar extends StatelessWidget {
-  const AchievementCalendar({Key? key}) : super(key: key);
+  const AchievementCalendar({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +61,7 @@ class AchievementCalendar extends StatelessWidget {
                                   context,
                                 ).colorScheme.primary.withOpacity(0.7)
                                 : isPast
-                                ? Theme.of(context).colorScheme.surfaceVariant
+                                ? Theme.of(context).colorScheme.surfaceContainerHighest
                                 : Colors.transparent,
                         borderRadius: BorderRadius.circular(8),
                         border:
@@ -109,7 +109,7 @@ class AchievementCalendar extends StatelessWidget {
                       width: 16,
                       height: 16,
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surfaceVariant,
+                        color: Theme.of(context).colorScheme.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),

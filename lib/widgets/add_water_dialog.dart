@@ -6,7 +6,7 @@ import '../models/drink.dart';
 import '../utils/constants.dart';
 
 class AddWaterDialog extends StatefulWidget {
-  const AddWaterDialog({Key? key}) : super(key: key);
+  const AddWaterDialog({super.key});
 
   @override
   State<AddWaterDialog> createState() => _AddWaterDialogState();

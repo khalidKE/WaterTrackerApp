@@ -7,11 +7,11 @@ class WaterProgress extends StatefulWidget {
   final bool isExpanded;
 
   const WaterProgress({
-    Key? key,
+    super.key,
     required this.progress,
     required this.goal,
     this.isExpanded = false,
-  }) : super(key: key);
+  });
 
   @override
   State<WaterProgress> createState() => WaterProgressState();

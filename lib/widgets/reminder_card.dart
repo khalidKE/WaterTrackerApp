@@ -5,7 +5,7 @@ import '../providers/water_provider.dart';
 import '../services/notification_service.dart';
 
 class ReminderCard extends StatelessWidget {
-  const ReminderCard({Key? key}) : super(key: key);
+  const ReminderCard({super.key});
 
   @override
   Widget build(BuildContext context) {

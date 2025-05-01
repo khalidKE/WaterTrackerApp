@@ -8,7 +8,7 @@ import '../widgets/add_water_dialog.dart';
 class RecentDrinks extends StatelessWidget {
   final List<Drink> drinks;
 
-  const RecentDrinks({Key? key, required this.drinks}) : super(key: key);
+  const RecentDrinks({super.key, required this.drinks});
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +27,7 @@ class RecentDrinks extends StatelessWidget {
           child: Center(
             child: Column(
               children: [
-                Image.asset('images/empty_glass.png', height: 80),
+                Image.asset('images/small_glass.png', height: 80),
                 const SizedBox(height: 16),
                 Text(
                   'No drinks added today',
