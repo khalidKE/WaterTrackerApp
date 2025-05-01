@@ -10,7 +10,8 @@ import '../widgets/add_water_dialog.dart';
 import '../widgets/recent_drinks.dart';
 import '../widgets/reminder_card.dart';
 import '../widgets/water_progress.dart';
-import 'profile_screen.dart'; // Import the new ProfileScreen
+import '../services/notification_service.dart'; // Import notification service
+import 'profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -25,6 +26,8 @@ class _HomeScreenState extends State<HomeScreen>
   late AnimationController _animationController;
   final GlobalKey<WaterProgressState> _waterProgressKey =
       GlobalKey<WaterProgressState>();
+  final NotificationService _notificationService =
+      NotificationService(); // Add notification service
 
   @override
   void initState() {
@@ -80,6 +83,8 @@ class _HomeScreenState extends State<HomeScreen>
     final size = MediaQuery.of(context).size;
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final isSmallScreen = size.width < 360;
+    final hasActiveReminders =
+        _notificationService.activeNotifications.isNotEmpty;
 
     return Consumer<WaterProvider>(
       builder: (context, waterProvider, child) {
@@ -143,13 +148,14 @@ class _HomeScreenState extends State<HomeScreen>
                         icon: Stack(
                           children: [
                             const Icon(Icons.notifications_outlined),
-                            if (todayDrinks.isEmpty)
+                            // Show red indicator only if there are active reminders
+                            if (hasActiveReminders)
                               Positioned(
                                 right: 0,
                                 top: 0,
                                 child: Container(
                                   padding: const EdgeInsets.all(2),
-                                  decoration: BoxDecoration(
+                                  decoration: const BoxDecoration(
                                     color: Colors.red,
                                     shape: BoxShape.circle,
                                   ),
