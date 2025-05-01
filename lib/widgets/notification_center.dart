@@ -71,7 +71,7 @@ class _NotificationCenterState extends State<NotificationCenter> {
               ),
             ),
 
-            // Header
+            // Header - REMOVED YELLOW UNDERLINE
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
               child: FadeInDown(
@@ -90,12 +90,15 @@ class _NotificationCenterState extends State<NotificationCenter> {
                           ),
                         ),
                         const SizedBox(width: 8),
+                        // Plain text without decoration
                         Text(
                           'Hydration Hub',
                           style: GoogleFonts.poppins(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
                             color: isDarkMode ? Colors.white : Colors.blue[900],
+                            // Explicitly set no decoration
+                            decoration: TextDecoration.none,
                           ),
                         ),
                       ],
@@ -111,7 +114,7 @@ class _NotificationCenterState extends State<NotificationCenter> {
               ),
             ),
 
-            // Notification history
+            // Notification history - REMOVED YELLOW UNDERLINE
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               child: FadeInUp(
@@ -122,6 +125,8 @@ class _NotificationCenterState extends State<NotificationCenter> {
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                     color: isDarkMode ? Colors.white : Colors.blue[900],
+                    // Explicitly set no decoration
+                    decoration: TextDecoration.none,
                   ),
                 ),
               ),
@@ -146,6 +151,7 @@ class _NotificationCenterState extends State<NotificationCenter> {
                                         : Colors.blue[200],
                               ),
                               const SizedBox(height: 16),
+                              // REMOVED YELLOW UNDERLINE
                               Text(
                                 'No Notifications Yet',
                                 style: GoogleFonts.poppins(
@@ -155,9 +161,12 @@ class _NotificationCenterState extends State<NotificationCenter> {
                                       isDarkMode
                                           ? Colors.grey[400]
                                           : Colors.grey[700],
+                                  // Explicitly set no decoration
+                                  decoration: TextDecoration.none,
                                 ),
                               ),
                               const SizedBox(height: 8),
+                              // REMOVED YELLOW UNDERLINE
                               Text(
                                 'Your hydration reminders will flow in here!',
                                 style: GoogleFonts.poppins(
@@ -167,6 +176,8 @@ class _NotificationCenterState extends State<NotificationCenter> {
                                           ? Colors.grey[500]
                                           : Colors.grey[600],
                                   fontStyle: FontStyle.italic,
+                                  // Explicitly set no decoration
+                                  decoration: TextDecoration.none,
                                 ),
                                 textAlign: TextAlign.center,
                               ),
