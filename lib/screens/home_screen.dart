@@ -9,6 +9,7 @@ import '../widgets/add_water_dialog.dart';
 import '../widgets/recent_drinks.dart';
 import '../widgets/reminder_card.dart';
 import '../widgets/water_progress.dart';
+import 'profile_screen.dart'; // Import the new ProfileScreen
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -61,6 +62,16 @@ class _HomeScreenState extends State<HomeScreen>
         _animationController.reverse();
       }
     });
+  }
+
+  // Show all drinks in a bottom sheet
+  void _showAllDrinks(BuildContext context, List<Drink> drinks) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DrinksHistoryBottomSheet(drinks: drinks),
+    );
   }
 
   @override
@@ -118,7 +129,7 @@ class _HomeScreenState extends State<HomeScreen>
                         ),
                         const SizedBox(width: 12),
                         Text(
-                          'Hydrate',
+                          'Hydromate',
                           style: GoogleFonts.poppins(
                             fontWeight: FontWeight.bold,
                             fontSize: 22,
@@ -157,7 +168,12 @@ class _HomeScreenState extends State<HomeScreen>
                         padding: const EdgeInsets.only(right: 8.0),
                         child: GestureDetector(
                           onTap: () {
-                            // Navigate to profile
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const ProfileScreen(),
+                              ),
+                            );
                           },
                           child: Container(
                             decoration: BoxDecoration(
@@ -452,7 +468,8 @@ class _HomeScreenState extends State<HomeScreen>
                                   icon: const Icon(Icons.history, size: 16),
                                   label: const Text('View All'),
                                   onPressed: () {
-                                    // Navigate to history screen
+                                    // Show all drinks in a bottom sheet
+                                    _showAllDrinks(context, todayDrinks);
                                   },
                                   style: TextButton.styleFrom(
                                     foregroundColor:
@@ -516,7 +533,7 @@ class _HomeScreenState extends State<HomeScreen>
             SnackBar(
               content: Row(
                 children: [
-                  Icon(Icons.check_circle, color: Colors.white),
+                  const Icon(Icons.check_circle, color: Colors.white),
                   const SizedBox(width: 12),
                   Text('Added $amount ml of water'),
                 ],
@@ -632,5 +649,294 @@ class _HomeScreenState extends State<HomeScreen>
         ),
       ],
     );
+  }
+}
+
+// Bottom sheet to display all drinks
+class DrinksHistoryBottomSheet extends StatelessWidget {
+  final List<Drink> drinks;
+
+  const DrinksHistoryBottomSheet({Key? key, required this.drinks})
+    : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final height = MediaQuery.of(context).size.height * 0.7;
+
+    return Container(
+      height: height,
+      decoration: BoxDecoration(
+        color:
+            isDarkMode
+                ? Theme.of(context).scaffoldBackgroundColor
+                : Colors.white,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(24),
+          topRight: Radius.circular(24),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Handle bar
+          Center(
+            child: Container(
+              margin: const EdgeInsets.only(top: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+
+          // Header
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Drinks History',
+                  style: GoogleFonts.poppins(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ],
+            ),
+          ),
+
+          // Date
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Text(
+              DateFormat('EEEE, MMMM d').format(DateTime.now()),
+              style: TextStyle(
+                color: Theme.of(context).textTheme.bodySmall?.color,
+              ),
+            ),
+          ),
+
+          const Divider(height: 32),
+
+          // Drinks list
+          Expanded(
+            child:
+                drinks.isEmpty
+                    ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.water_drop_outlined,
+                            size: 48,
+                            color: Colors.grey.withOpacity(0.5),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No drinks recorded today',
+                            style: GoogleFonts.poppins(
+                              color: Colors.grey,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                    : ListView.separated(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                      itemCount: drinks.length,
+                      separatorBuilder: (context, index) => const Divider(),
+                      itemBuilder: (context, index) {
+                        final drink = drinks[index];
+                        return Dismissible(
+                          key: Key(
+                            'drink_${drink.timestamp.millisecondsSinceEpoch}',
+                          ),
+                          background: Container(
+                            color: Colors.red.withOpacity(0.2),
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.only(right: 20),
+                            child: const Icon(Icons.delete, color: Colors.red),
+                          ),
+                          direction: DismissDirection.endToStart,
+                          onDismissed: (direction) {
+                            Provider.of<WaterProvider>(
+                              context,
+                              listen: false,
+                            ).removeDrink(index);
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: const Text('Drink removed'),
+                                action: SnackBarAction(
+                                  label: 'UNDO',
+                                  onPressed: () {
+                                    Provider.of<WaterProvider>(
+                                      context,
+                                      listen: false,
+                                    ).addDrink(drink);
+                                  },
+                                ),
+                              ),
+                            );
+                          },
+                          child: ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: _buildDrinkTypeIcon(drink.type),
+                            title: Text(
+                              _getDrinkTypeString(drink.type),
+                              style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            subtitle: Text(
+                              DateFormat('HH:mm').format(drink.timestamp),
+                              style: GoogleFonts.poppins(fontSize: 12),
+                            ),
+                            trailing: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.primary.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Text(
+                                '${drink.amount} ml',
+                                style: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.bold,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+          ),
+
+          // Summary
+          if (drinks.isNotEmpty)
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color:
+                    isDarkMode
+                        ? Theme.of(context).colorScheme.surface
+                        : Theme.of(
+                          context,
+                        ).colorScheme.primary.withOpacity(0.05),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Total Consumed',
+                        style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        '${drinks.fold(0, (sum, drink) => sum + drink.amount)} ml',
+                        style: GoogleFonts.poppins(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => const AddWaterDialog(),
+                      );
+                    },
+                    icon: const Icon(Icons.add),
+                    label: const Text('Add Drink'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDrinkTypeIcon(DrinkType type) {
+    IconData icon;
+    Color color;
+
+    switch (type) {
+      case DrinkType.water:
+        icon = Icons.water_drop;
+        color = Colors.blue;
+        break;
+      case DrinkType.coffee:
+        icon = Icons.coffee;
+        color = Colors.brown;
+        break;
+      case DrinkType.tea:
+        icon = Icons.emoji_food_beverage;
+        color = Colors.green;
+        break;
+      case DrinkType.juice:
+        icon = Icons.local_drink;
+        color = Colors.orange;
+        break;
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.2),
+        shape: BoxShape.circle,
+      ),
+      child: Icon(icon, color: color, size: 20),
+    );
+  }
+
+  String _getDrinkTypeString(DrinkType type) {
+    switch (type) {
+      case DrinkType.water:
+        return 'Water';
+      case DrinkType.coffee:
+        return 'Coffee';
+      case DrinkType.tea:
+        return 'Tea';
+      case DrinkType.juice:
+        return 'Juice';
+    }
   }
 }
