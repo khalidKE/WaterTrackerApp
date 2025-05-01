@@ -43,7 +43,10 @@ class WaterProgressState extends State<WaterProgress>
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
 
-    _animationController.repeat();
+    // Only start animation if progress > 0 to save resources
+    if (widget.progress > 0) {
+      _animationController.repeat();
+    }
 
     // Initialize fill percentage
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -56,6 +59,12 @@ class WaterProgressState extends State<WaterProgress>
     super.didUpdateWidget(oldWidget);
     if (oldWidget.progress != widget.progress) {
       _updateFillPercentage();
+      // Start or stop animation based on progress
+      if (widget.progress > 0 && !_animationController.isAnimating) {
+        _animationController.repeat();
+      } else if (widget.progress == 0 && _animationController.isAnimating) {
+        _animationController.stop();
+      }
     }
   }
 
@@ -67,13 +76,15 @@ class WaterProgressState extends State<WaterProgress>
   }
 
   void triggerWaveAnimation() {
-    if (!_isAnimating) {
+    if (!_isAnimating && widget.progress > 0) {
       _isAnimating = true;
       _animationController.stop();
       _animationController.duration = const Duration(milliseconds: 800);
       _animationController.forward(from: 0.0).then((_) {
         _animationController.duration = const Duration(seconds: 2);
-        _animationController.repeat();
+        if (widget.progress > 0) {
+          _animationController.repeat();
+        }
         _isAnimating = false;
       });
     }
@@ -120,30 +131,42 @@ class WaterProgressState extends State<WaterProgress>
                 ),
               ),
 
-              // Percentage text
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    '${(percentage * 100).toInt()}%',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color:
-                          percentage > 0.5 && !isDarkMode ? Colors.white : null,
-                    ),
+              // Percentage text with FittedBox to prevent overflow
+              SizedBox(
+                height:
+                    circleSize * 0.5, // Constrain height to fit within circle
+                width: circleSize * 0.8, // Constrain width for text
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        '${(percentage * 100).toInt()}%',
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color:
+                              percentage > 0.5 && !isDarkMode
+                                  ? Colors.white
+                                  : null,
+                        ),
+                      ),
+                      Text(
+                        '${widget.progress} / ${widget.goal} ml',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color:
+                              percentage > 0.5 && !isDarkMode
+                                  ? Colors.white.withOpacity(0.9)
+                                  : Theme.of(
+                                    context,
+                                  ).textTheme.bodySmall?.color,
+                        ),
+                      ),
+                    ],
                   ),
-                  Text(
-                    '${widget.progress} / ${widget.goal} ml',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color:
-                          percentage > 0.5 && !isDarkMode
-                              ? Colors.white.withOpacity(0.9)
-                              : Theme.of(context).textTheme.bodySmall?.color,
-                    ),
-                  ),
-                ],
+                ),
               ),
             ],
           ),
@@ -197,7 +220,6 @@ class WaveProgressPainter extends CustomPainter {
     // Create a clipping path for the circle
     final clipPath =
         Path()..addOval(Rect.fromCircle(center: center, radius: radius));
-
     canvas.clipPath(clipPath);
 
     // Calculate wave parameters
