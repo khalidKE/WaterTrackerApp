@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:water_tracker/widgets/notification_center.dart';
 
 import '../models/drink.dart';
 import '../providers/water_provider.dart';
@@ -161,7 +162,12 @@ class _HomeScreenState extends State<HomeScreen>
                           ],
                         ),
                         onPressed: () {
-                          // Show notifications
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => NotificationCenter(),
+                            ),
+                          );
                         },
                       ),
                       Padding(
@@ -656,8 +662,7 @@ class _HomeScreenState extends State<HomeScreen>
 class DrinksHistoryBottomSheet extends StatelessWidget {
   final List<Drink> drinks;
 
-  const DrinksHistoryBottomSheet({Key? key, required this.drinks})
-    : super(key: key);
+  const DrinksHistoryBottomSheet({super.key, required this.drinks});
 
   @override
   Widget build(BuildContext context) {

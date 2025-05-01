@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../providers/water_provider.dart';
 import '../models/drink.dart';
-import '../utils/constants.dart';
 
 class AddWaterDialog extends StatefulWidget {
   const AddWaterDialog({super.key});
