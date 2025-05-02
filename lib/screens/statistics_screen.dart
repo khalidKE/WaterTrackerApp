@@ -843,14 +843,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                       Icons.emoji_events,
                       Colors.amber,
                     ),
-                    const Divider(height: 24, thickness: 1),
-                    _buildInsightTile(
-                      context,
-                      'Room for Improvement',
-                      _getWorstDayOfWeek(weekData),
-                      Icons.trending_down,
-                      Colors.redAccent,
-                    ),
+
                     const Divider(height: 24, thickness: 1),
                     _buildInsightTile(
                       context,
