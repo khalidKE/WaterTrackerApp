@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:animate_do/animate_do.dart';
 
 import '../providers/water_provider.dart';
-import '../widgets/achievement_list.dart';
 import '../widgets/goal_calculator.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -285,117 +284,7 @@ class ProfileScreen extends StatelessWidget {
                       ),
                     ),
 
-                    const SizedBox(height: 24),
-
-                    // Achievements section
-                    FadeInUp(
-                      delay: const Duration(milliseconds: 400),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: colorScheme.primary.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Icon(
-                              Icons.emoji_events,
-                              color: colorScheme.primary,
-                              size: 18,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Text(
-                            'Achievements',
-                            style: GoogleFonts.poppins(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    FadeInUp(
-                      delay: const Duration(milliseconds: 500),
-                      child: const AchievementList(),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // Active challenges section
-                    FadeInUp(
-                      delay: const Duration(milliseconds: 600),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: colorScheme.primary.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Icon(
-                              Icons.local_fire_department,
-                              color: colorScheme.primary,
-                              size: 18,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Text(
-                            'Active Challenges',
-                            style: GoogleFonts.poppins(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    FadeInUp(
-                      delay: const Duration(milliseconds: 700),
-                      child: _buildGlassCard(
-                        context,
-                        child: Column(
-                          children: [
-                            _buildChallengeItem(
-                              context,
-                              'Weekly Streak',
-                              'Drink your goal for 7 days in a row',
-                              Icons.emoji_events,
-                              Colors.amber,
-                              3,
-                              7,
-                            ),
-                            const Divider(height: 24),
-                            _buildChallengeItem(
-                              context,
-                              'Morning Hydration',
-                              'Drink 300ml within 30 minutes of waking up',
-                              Icons.wb_sunny,
-                              Colors.orange,
-                              5,
-                              10,
-                            ),
-                            const Divider(height: 24),
-                            _buildChallengeItem(
-                              context,
-                              'Hydration Variety',
-                              'Drink 4 different types of healthy beverages',
-                              Icons.local_bar,
-                              Colors.teal,
-                              2,
-                              4,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-
+                   
                     const SizedBox(height: 20),
                   ],
                 ),

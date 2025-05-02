@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:water_tracker/screens/SignUp_Screen.dart';
+import 'package:water_tracker/screens/profile_screen.dart';
 
 import '../providers/theme_provider.dart';
 import '../providers/water_provider.dart';
@@ -40,10 +42,7 @@ class SettingsScreen extends StatelessWidget {
                       style: GoogleFonts.poppins(
                         fontSize: 24,
                         fontWeight: FontWeight.w500,
-                        color:
-                            isDarkMode
-                                ? Colors.white
-                                : const Color.fromARGB(206, 0, 0, 0),
+                        color: isDarkMode ? Colors.white : Colors.black,
                       ),
                     ),
                     background: AnimatedContainer(
@@ -99,7 +98,12 @@ class SettingsScreen extends StatelessWidget {
                             color: _getIconColor(context),
                           ),
                           onTap: () {
-                            // Navigate to profile settings
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ProfileScreen(),
+                              ),
+                            );
                           },
                         ),
                       ),
@@ -211,31 +215,7 @@ class SettingsScreen extends StatelessWidget {
                         },
                       ),
                     ),
-                    _buildCard(
-                      context,
-                      child: ListTile(
-                        title: const Text(
-                          'Reminder Frequency',
-                          style: TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                        subtitle: const Text(
-                          'Customize how often you get reminders',
-                        ),
-                        trailing: Icon(
-                          Icons.arrow_forward_ios,
-                          size: 16,
-                          color: _getIconColor(context),
-                        ),
-                        leading: Icon(
-                          MdiIcons.timer,
-                          color: _getIconColor(context),
-                        ),
-                        onTap: () {
-                          HapticFeedback.lightImpact();
-                          // Navigate to reminder frequency settings
-                        },
-                      ),
-                    ),
+
                     // Units Settings
                     _buildSectionHeader(context, 'Units', MdiIcons.ruler),
                     _buildCard(
@@ -285,45 +265,23 @@ class SettingsScreen extends StatelessWidget {
                     ),
                     // App Settings
                     _buildSectionHeader(context, 'App Settings', MdiIcons.cog),
+
                     _buildCard(
                       context,
                       child: ListTile(
                         title: const Text(
-                          'Backup & Restore',
+                          'Log out',
                           style: TextStyle(fontWeight: FontWeight.w600),
                         ),
                         subtitle: const Text(
-                          'Secure your data with cloud backup',
+                          'Are you sure you want to Log out?',
                         ),
                         trailing: Icon(
                           Icons.arrow_forward_ios,
                           size: 16,
                           color: _getIconColor(context),
                         ),
-                        leading: Icon(
-                          MdiIcons.cloudUpload,
-                          color: _getIconColor(context),
-                        ),
-                        onTap: () {
-                          HapticFeedback.lightImpact();
-                          // Navigate to backup settings
-                        },
-                      ),
-                    ),
-                    _buildCard(
-                      context,
-                      child: ListTile(
-                        title: const Text(
-                          'Clear Data',
-                          style: TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                        subtitle: const Text('Permanently delete all app data'),
-                        trailing: Icon(
-                          Icons.arrow_forward_ios,
-                          size: 16,
-                          color: _getIconColor(context),
-                        ),
-                        leading: Icon(MdiIcons.delete, color: Colors.redAccent),
+                        leading: Icon(MdiIcons.logout, color: Colors.redAccent),
                         onTap: () {
                           HapticFeedback.heavyImpact();
                           showDialog(
@@ -333,9 +291,9 @@ class SettingsScreen extends StatelessWidget {
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(16),
                                   ),
-                                  title: const Text('Clear All Data'),
+                                  title: const Text('Log out'),
                                   content: const Text(
-                                    'Are you sure you want to delete all app data? This action cannot be undone.',
+                                    'Are you sure you want to Log out? This action cannot be undone.',
                                   ),
                                   actions: [
                                     TextButton(
@@ -346,10 +304,17 @@ class SettingsScreen extends StatelessWidget {
                                     TextButton(
                                       onPressed: () {
                                         // Clear all data
-                                        Navigator.of(context).pop();
+                                        Navigator.pushAndRemoveUntil(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder:
+                                                (context) => const SignupScreen(),
+                                          ),
+                                          (route) => false,
+                                        );
                                       },
                                       child: const Text(
-                                        'Delete',
+                                        'Log out',
                                         style: TextStyle(color: Colors.red),
                                       ),
                                     ),

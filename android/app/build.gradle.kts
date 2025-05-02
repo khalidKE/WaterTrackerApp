@@ -9,6 +9,7 @@ plugins {
 android {
     namespace = "com.daily.water_tracker"
     compileSdk = 35 // Updated to 35
+    ndkVersion = "27.0.12077973"
 
     compileOptions {
         isCoreLibraryDesugaringEnabled = true // Correct Kotlin DSL syntax
@@ -22,10 +23,10 @@ android {
 
     defaultConfig {
         applicationId = "com.daily.water_tracker"
-        minSdk = 21
-        targetSdk = 35 // Updated to 35
-        versionCode = 1
-        versionName = "1.0"
+        minSdk = 23
+        targetSdk = flutter.targetSdkVersion // Updated to 35
+        versionCode = flutter.versionCode
+        versionName = flutter.versionName
         multiDexEnabled = true // Correct Kotlin DSL syntax
     }
 
@@ -37,7 +38,7 @@ android {
 }
 
 dependencies {
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4") // Updated to 2.1.4
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5") // Updated to 2.1.4
 }
 
 flutter {
