@@ -23,21 +23,35 @@ class _StatisticsScreenState extends State<StatisticsScreen>
     with TickerProviderStateMixin {
   late TabController _tabController;
   late AnimationController _animationController;
+  late AnimationController _lottieController;
+  int _selectedTabIndex = 0;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _tabController.addListener(() {
+      setState(() {
+        _selectedTabIndex = _tabController.index;
+      });
+    });
+
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 800),
     )..forward();
+
+    _lottieController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    )..repeat();
   }
 
   @override
   void dispose() {
     _tabController.dispose();
     _animationController.dispose();
+    _lottieController.dispose();
     super.dispose();
   }
 
@@ -45,45 +59,9 @@ class _StatisticsScreenState extends State<StatisticsScreen>
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final colorScheme = Theme.of(context).colorScheme;
+    final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      appBar: AppBar(
-        title: FadeIn(
-          controller: (controller) => _animationController,
-          child: Text(
-            'Water Insights',
-            style: GoogleFonts.poppins(
-              fontWeight: FontWeight.w700,
-              fontSize: 24,
-            ),
-          ),
-        ),
-        elevation: 0,
-        backgroundColor: isDarkMode ? null : Colors.white,
-        bottom: TabBar(
-          controller: _tabController,
-          labelStyle: GoogleFonts.poppins(
-            fontWeight: FontWeight.w600,
-            fontSize: 16,
-          ),
-          unselectedLabelStyle: GoogleFonts.poppins(
-            fontWeight: FontWeight.w400,
-            fontSize: 14,
-          ),
-          indicator: BoxDecoration(
-            borderRadius: BorderRadius.circular(50),
-            gradient: LinearGradient(
-              colors: [colorScheme.primary, colorScheme.secondary],
-            ),
-          ),
-          indicatorPadding: const EdgeInsets.symmetric(horizontal: 16),
-          tabs: const [
-            Tab(text: 'Daily'),
-            Tab(text: 'Weekly'),
-            Tab(text: 'Monthly'),
-          ],
-        ),
-      ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -91,21 +69,113 @@ class _StatisticsScreenState extends State<StatisticsScreen>
             end: Alignment.bottomCenter,
             colors:
                 isDarkMode
-                    ? [Colors.grey[900]!, Colors.grey[800]!]
-                    : [Colors.blue[50]!, Colors.white],
+                    ? [const Color(0xFF1A1F25), const Color(0xFF101418)]
+                    : [const Color(0xFFE6F4FF), const Color(0xFFF5FAFF)],
           ),
         ),
-        child: Consumer<WaterProvider>(
-          builder: (context, waterProvider, child) {
-            return TabBarView(
-              controller: _tabController,
-              children: [
-                _buildDailyStatistics(waterProvider),
-                _buildWeeklyStatistics(waterProvider),
-                _buildMonthlyStatistics(waterProvider),
-              ],
-            );
-          },
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Custom App Bar with animated water drop
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        const SizedBox(width: 12),
+                        FadeIn(
+                          controller: (controller) => _animationController,
+                          child: Text(
+                            'Hydration Analytics',
+                            style: GoogleFonts.poppins(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w700,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              // Custom Tab Bar - FIXED: Removed text overflow issues
+              Container(
+                margin: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+                height: 56,
+                decoration: BoxDecoration(
+                  color:
+                      isDarkMode
+                          ? Colors.grey[850]!.withOpacity(0.3)
+                          : Colors.white.withOpacity(0.7),
+                  borderRadius: BorderRadius.circular(28),
+                  boxShadow: [
+                    BoxShadow(
+                      color:
+                          isDarkMode
+                              ? Colors.black12
+                              : Colors.blue.withOpacity(0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: TabBar(
+                  controller: _tabController,
+                  labelStyle: GoogleFonts.poppins(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                  ),
+                  unselectedLabelStyle: GoogleFonts.poppins(
+                    fontWeight: FontWeight.w400,
+                    fontSize: 14,
+                  ),
+                  indicator: BoxDecoration(
+                    borderRadius: BorderRadius.circular(28),
+                    gradient: LinearGradient(
+                      colors: [colorScheme.primary, const Color(0xFF5AC8FA)],
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: colorScheme.primary.withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  labelColor: Colors.white,
+                  unselectedLabelColor:
+                      isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                  indicatorSize: TabBarIndicatorSize.tab,
+                  padding: const EdgeInsets.all(4),
+                  tabs: const [
+                    Tab(text: 'Daily'),
+                    Tab(text: 'Week'),
+                    Tab(text: 'Month'),
+                  ],
+                ),
+              ),
+
+              // Tab content
+              Expanded(
+                child: Consumer<WaterProvider>(
+                  builder: (context, waterProvider, child) {
+                    return TabBarView(
+                      controller: _tabController,
+                      children: [
+                        _buildDailyStatistics(waterProvider),
+                        _buildWeeklyStatistics(waterProvider),
+                        _buildMonthlyStatistics(waterProvider),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -130,124 +200,199 @@ class _StatisticsScreenState extends State<StatisticsScreen>
     }
 
     return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.all(20.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Today's summary card with wave animation
           FadeInUp(
             controller: (controller) => _animationController,
             child: _buildGlassCard(
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Today’s Hydration',
-                      style: GoogleFonts.poppins(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                    ),
-                    Text(
-                      DateFormat('EEEE, MMMM d').format(DateTime.now()),
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+              child: Stack(
+                children: [
+                  // Wave animation in background
+                  Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildAnimatedStatItem(
-                          context,
-                          '$todayTotal ml',
-                          'Consumed',
-                          Icons.water_drop,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Today\'s Hydration',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w700,
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
+                                  ),
+                                ),
+                                Text(
+                                  DateFormat(
+                                    'EEEE, MMMM d',
+                                  ).format(DateTime.now()),
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 14,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            _buildProgressCircle(percentage),
+                          ],
                         ),
-                        _buildAnimatedStatItem(
-                          context,
-                          '$goal ml',
-                          'Goal',
-                          Icons.flag,
-                        ),
-                        _buildAnimatedStatItem(
-                          context,
-                          '$percentage%',
-                          'Progress',
-                          Icons.show_chart,
+                        const SizedBox(height: 20),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            _buildAnimatedStatItem(
+                              context,
+                              '$todayTotal ml',
+                              'Consumed',
+                              Icons.water_drop,
+                            ),
+                            _buildAnimatedStatItem(
+                              context,
+                              '$goal ml',
+                              'Goal',
+                              Icons.flag,
+                            ),
+                            _buildAnimatedStatItem(
+                              context,
+                              '${todayDrinks.length}',
+                              'Drinks',
+                              Icons.local_drink,
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
+
           const SizedBox(height: 24),
+
+          // Section title with icon
           FadeInUp(
             delay: const Duration(milliseconds: 200),
             controller: (controller) => _animationController,
-            child: Text(
-              'Drink Distribution',
-              style: GoogleFonts.poppins(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.pie_chart,
+                    color: Theme.of(context).colorScheme.primary,
+                    size: 18,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  'Drink Distribution',
+                  style: GoogleFonts.poppins(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
           ),
+
           const SizedBox(height: 12),
+
+          // FIXED: Water percentage display moved to bottom
           FadeInUp(
             delay: const Duration(milliseconds: 300),
             controller: (controller) => _animationController,
             child: _buildGlassCard(
               child: Padding(
                 padding: const EdgeInsets.all(20.0),
-                child: SizedBox(
-                  height: 220,
-                  child:
-                      drinkDistribution.isEmpty
-                          ? Center(
-                            child: Text(
-                              'No drinks recorded today',
-                              style: GoogleFonts.poppins(
-                                color: Colors.grey[500],
-                                fontSize: 16,
+                child: Column(
+                  children: [
+                    SizedBox(
+                      height: 200,
+                      child:
+                          drinkDistribution.isEmpty
+                              ? _buildEmptyStateWidget(
+                                'No drinks recorded today',
+                                'Try adding different types of drinks to see your distribution',
+                              )
+                              : PieChart(
+                                PieChartData(
+                                  sectionsSpace:
+                                      10, // Added space between sections
+                                  centerSpaceRadius: 60,
+                                  sections: _buildPieChartSections(
+                                    drinkDistribution,
+                                    context,
+                                  ),
+                                  pieTouchData: PieTouchData(
+                                    touchCallback:
+                                        (
+                                          FlTouchEvent event,
+                                          pieTouchResponse,
+                                        ) {},
+                                  ),
+                                ),
                               ),
-                            ),
-                          )
-                          : PieChart(
-                            PieChartData(
-                              sectionsSpace: 3,
-                              centerSpaceRadius: 50,
-                              sections: _buildPieChartSections(
-                                drinkDistribution,
-                              ),
-                              pieTouchData: PieTouchData(
-                                touchCallback:
-                                    (FlTouchEvent event, pieTouchResponse) {},
-                              ),
-                            ),
-                          ),
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
+
           const SizedBox(height: 24),
+
+          // Section title with icon
           FadeInUp(
             delay: const Duration(milliseconds: 400),
             controller: (controller) => _animationController,
-            child: Text(
-              'Hourly Consumption',
-              style: GoogleFonts.poppins(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.bar_chart,
+                    color: Theme.of(context).colorScheme.primary,
+                    size: 18,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  'Hourly Consumption',
+                  style: GoogleFonts.poppins(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
           ),
+
           const SizedBox(height: 12),
+
+          // FIXED: Bar chart with proper y-axis labels
           FadeInUp(
             delay: const Duration(milliseconds: 500),
             controller: (controller) => _animationController,
@@ -255,17 +400,12 @@ class _StatisticsScreenState extends State<StatisticsScreen>
               child: Padding(
                 padding: const EdgeInsets.all(20.0),
                 child: SizedBox(
-                  height: 220,
+                  height: 250,
                   child:
                       hourlyConsumption.isEmpty
-                          ? Center(
-                            child: Text(
-                              'No drinks recorded today',
-                              style: GoogleFonts.poppins(
-                                color: Colors.grey[500],
-                                fontSize: 16,
-                              ),
-                            ),
+                          ? _buildEmptyStateWidget(
+                            'No hourly data available',
+                            'Add drinks throughout the day to see your consumption pattern',
                           )
                           : BarChart(
                             BarChartData(
@@ -273,6 +413,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                               maxY: _getMaxHourlyConsumption(hourlyConsumption),
                               barGroups: _buildHourlyBarGroups(
                                 hourlyConsumption,
+                                context,
                               ),
                               titlesData: FlTitlesData(
                                 show: true,
@@ -284,10 +425,11 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                                       TitleMeta meta,
                                     ) {
                                       return SideTitleWidget(
+                                        angle: 0,
                                         meta: meta,
                                         space: 6,
                                         child: Text(
-                                          '${value.toInt()}:00',
+                                          '${value.toInt()} h', // Added 'h' for hours
                                           style: GoogleFonts.poppins(
                                             fontSize: 12,
                                           ),
@@ -297,26 +439,28 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                                     reservedSize: 32,
                                   ),
                                 ),
+                                // FIXED: Proper y-axis labels with better spacing
                                 leftTitles: AxisTitles(
                                   sideTitles: SideTitles(
                                     showTitles: true,
+                                    interval: 200,
                                     getTitlesWidget: (
                                       double value,
                                       TitleMeta meta,
                                     ) {
                                       return SideTitleWidget(
                                         meta: meta,
-
                                         space: 6,
                                         child: Text(
-                                          '${value.toInt()} ml',
+                                          '${value.toInt()} ml', // Added 'ml' for milliliters
                                           style: GoogleFonts.poppins(
                                             fontSize: 12,
                                           ),
                                         ),
                                       );
                                     },
-                                    reservedSize: 40,
+                                    reservedSize:
+                                        40, // Increased reserved size for 'ml'
                                   ),
                                 ),
                                 topTitles: const AxisTitles(
@@ -329,7 +473,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                               gridData: FlGridData(
                                 show: true,
                                 drawVerticalLine: false,
-                                horizontalInterval: 100,
+                                horizontalInterval: 200,
                                 getDrawingHorizontalLine: (value) {
                                   return FlLine(
                                     color: Colors.grey.withOpacity(0.2),
@@ -344,6 +488,43 @@ class _StatisticsScreenState extends State<StatisticsScreen>
               ),
             ),
           ),
+
+          // Hydration tips card
+          const SizedBox(height: 24),
+          FadeInUp(
+            delay: const Duration(milliseconds: 600),
+            controller: (controller) => _animationController,
+            child: _buildGlassCard(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.lightbulb, color: Colors.amber[600]),
+                        const SizedBox(width: 10),
+                        Text(
+                          'Hydration Tip',
+                          style: GoogleFonts.poppins(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Try drinking a glass of water before each meal. This helps with digestion and can prevent overeating.',
+                      style: GoogleFonts.poppins(fontSize: 14, height: 1.5),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 20),
         ],
       ),
     );
@@ -357,12 +538,18 @@ class _StatisticsScreenState extends State<StatisticsScreen>
     );
     final weeklyAverage = weekData.isEmpty ? 0 : weeklyTotal ~/ weekData.length;
     final goal = waterProvider.dailyGoal;
+    final goalDays =
+        weekData.where((day) => (day['amount'] as int) >= goal).length;
+    final goalPercentage =
+        weekData.isEmpty ? 0 : (goalDays / weekData.length * 100).round();
 
     return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.all(20.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Weekly overview card
           FadeInUp(
             controller: (controller) => _animationController,
             child: _buildGlassCard(
@@ -371,15 +558,79 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Weekly Overview',
-                      style: GoogleFonts.poppins(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Weekly Overview',
+                              style: GoogleFonts.poppins(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                            ),
+                            Text(
+                              'Last 7 days',
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color:
+                                goalPercentage >= 70
+                                    ? Colors.green.withOpacity(0.2)
+                                    : goalPercentage >= 40
+                                    ? Colors.orange.withOpacity(0.2)
+                                    : Colors.red.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                goalPercentage >= 70
+                                    ? Icons.sentiment_very_satisfied
+                                    : goalPercentage >= 40
+                                    ? Icons.sentiment_satisfied
+                                    : Icons.sentiment_dissatisfied,
+                                size: 16,
+                                color:
+                                    goalPercentage >= 70
+                                        ? Colors.green
+                                        : goalPercentage >= 40
+                                        ? Colors.orange
+                                        : Colors.red,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '$goalPercentage% Goal Days',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color:
+                                      goalPercentage >= 70
+                                          ? Colors.green
+                                          : goalPercentage >= 40
+                                          ? Colors.orange
+                                          : Colors.red,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 20),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
@@ -397,7 +648,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                         ),
                         _buildAnimatedStatItem(
                           context,
-                          '${weekData.where((day) => (day['amount'] as int) >= goal).length}',
+                          '$goalDays/${weekData.length}',
                           'Goal Days',
                           Icons.emoji_events,
                         ),
@@ -405,17 +656,12 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                     ),
                     const SizedBox(height: 20),
                     SizedBox(
-                      height: 220,
+                      height: 250,
                       child:
                           weekData.isEmpty
-                              ? Center(
-                                child: Text(
-                                  'No data for this week',
-                                  style: GoogleFonts.poppins(
-                                    color: Colors.grey[500],
-                                    fontSize: 16,
-                                  ),
-                                ),
+                              ? _buildEmptyStateWidget(
+                                'No data for this week',
+                                'Start tracking your water intake to see weekly statistics',
                               )
                               : BarChart(
                                 BarChartData(
@@ -438,20 +684,19 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                                           TitleMeta meta,
                                         ) {
                                           final days = [
-                                            'Mon',
-                                            'Tue',
-                                            'Wed',
-                                            'Thu',
-                                            'Fri',
-                                            'Sat',
-                                            'Sun',
+                                            'M',
+                                            'T',
+                                            'W',
+                                            'T',
+                                            'F',
+                                            'S',
+                                            'S',
                                           ];
                                           final index = value.toInt();
                                           if (index >= 0 &&
                                               index < days.length) {
                                             return SideTitleWidget(
                                               meta: meta,
-
                                               space: 6,
                                               child: Text(
                                                 days[index],
@@ -514,19 +759,44 @@ class _StatisticsScreenState extends State<StatisticsScreen>
               ),
             ),
           ),
+
           const SizedBox(height: 24),
+
+          // Section title with icon
           FadeInUp(
             delay: const Duration(milliseconds: 200),
             controller: (controller) => _animationController,
-            child: Text(
-              'Achievement Calendar',
-              style: GoogleFonts.poppins(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.calendar_today,
+                    color: Theme.of(context).colorScheme.primary,
+                    size: 18,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  'Achievement Calendar',
+                  style: GoogleFonts.poppins(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
           ),
+
           const SizedBox(height: 12),
+
+          // Achievement calendar with enhanced design
           FadeInUp(
             delay: const Duration(milliseconds: 300),
             controller: (controller) => _animationController,
@@ -537,6 +807,65 @@ class _StatisticsScreenState extends State<StatisticsScreen>
               ),
             ),
           ),
+
+          // Weekly insights card
+          const SizedBox(height: 24),
+          FadeInUp(
+            delay: const Duration(milliseconds: 400),
+            controller: (controller) => _animationController,
+            child: _buildGlassCard(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.insights,
+                          color: Theme.of(context).colorScheme.secondary,
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          'Weekly Insights',
+                          style: GoogleFonts.poppins(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    _buildInsightTile(
+                      context,
+                      'Best Hydration Day',
+                      _getBestDayOfWeek(weekData),
+                      Icons.emoji_events,
+                      Colors.amber,
+                    ),
+                    const Divider(height: 24, thickness: 1),
+                    _buildInsightTile(
+                      context,
+                      'Room for Improvement',
+                      _getWorstDayOfWeek(weekData),
+                      Icons.trending_down,
+                      Colors.redAccent,
+                    ),
+                    const Divider(height: 24, thickness: 1),
+                    _buildInsightTile(
+                      context,
+                      'Weekly Streak',
+                      '${_getCurrentWeeklyStreak(weekData, goal)} consecutive goal days',
+                      Icons.local_fire_department,
+                      Colors.deepOrange,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 20),
         ],
       ),
     );
@@ -557,202 +886,306 @@ class _StatisticsScreenState extends State<StatisticsScreen>
         monthData.isEmpty ? 0 : (goalDays / monthData.length * 100).round();
 
     return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.all(20.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Monthly insights card with gradient background
           FadeInUp(
             controller: (controller) => _animationController,
-            child: _buildGlassCard(
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Theme.of(context).colorScheme.primary,
+                    const Color(0xFF5AC8FA),
+                  ],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withOpacity(0.3),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(20.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Monthly Insights',
+                      'Monthly Overview',
                       style: GoogleFonts.poppins(
                         fontSize: 22,
                         fontWeight: FontWeight.w700,
-                        color: Theme.of(context).colorScheme.primary,
+                        color: Colors.white,
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    Text(
+                      DateFormat('MMMM yyyy').format(DateTime.now()),
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color: Colors.white.withOpacity(0.8),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        _buildAnimatedStatItem(
-                          context,
+                        _buildWhiteStatItem(
                           '$monthlyTotal ml',
                           'Total',
                           Icons.water_drop,
                         ),
-                        _buildAnimatedStatItem(
-                          context,
+                        _buildWhiteStatItem(
                           '$monthlyAverage ml',
                           'Daily Avg',
                           Icons.trending_up,
                         ),
-                        _buildAnimatedStatItem(
-                          context,
+                        _buildWhiteStatItem(
                           '$goalPercentage%',
                           'Goal Days',
                           Icons.emoji_events,
                         ),
                       ],
                     ),
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      height: 220,
-                      child:
-                          monthData.isEmpty
-                              ? Center(
-                                child: Text(
-                                  'No data for this month',
-                                  style: GoogleFonts.poppins(
-                                    color: Colors.grey[500],
-                                    fontSize: 16,
-                                  ),
-                                ),
-                              )
-                              : LineChart(
-                                LineChartData(
-                                  lineBarsData: [
-                                    LineChartBarData(
-                                      spots: _buildMonthlySpots(monthData),
-                                      isCurved: true,
-                                      gradient: LinearGradient(
-                                        colors: [
-                                          Theme.of(context).colorScheme.primary,
-                                          Theme.of(
-                                            context,
-                                          ).colorScheme.secondary,
-                                        ],
-                                      ),
-                                      barWidth: 4,
-                                      isStrokeCapRound: true,
-                                      dotData: FlDotData(show: false),
-                                      belowBarData: BarAreaData(
-                                        show: true,
-                                        gradient: LinearGradient(
-                                          colors: [
-                                            Theme.of(context)
-                                                .colorScheme
-                                                .primary
-                                                .withOpacity(0.3),
-                                            Theme.of(context)
-                                                .colorScheme
-                                                .secondary
-                                                .withOpacity(0.1),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                    LineChartBarData(
-                                      spots: List.generate(
-                                        monthData.length,
-                                        (index) => FlSpot(
-                                          index.toDouble(),
-                                          goal.toDouble(),
-                                        ),
-                                      ),
-                                      isCurved: false,
-                                      color: Colors.red.withOpacity(0.5),
-                                      barWidth: 2,
-                                      isStrokeCapRound: true,
-                                      dotData: FlDotData(show: false),
-                                      dashArray: [5, 5],
-                                    ),
-                                  ],
-                                  titlesData: FlTitlesData(
-                                    show: true,
-                                    bottomTitles: AxisTitles(
-                                      sideTitles: SideTitles(
-                                        showTitles: true,
-                                        getTitlesWidget: (
-                                          double value,
-                                          TitleMeta meta,
-                                        ) {
-                                          if (value.toInt() % 5 == 0) {
-                                            return SideTitleWidget(
-                                              meta: meta,
-                                              space: 6,
-                                              child: Text(
-                                                '${value.toInt() + 1}',
-                                                style: GoogleFonts.poppins(
-                                                  fontSize: 12,
-                                                ),
-                                              ),
-                                            );
-                                          }
-                                          return const SizedBox();
-                                        },
-                                        reservedSize: 32,
-                                      ),
-                                    ),
-                                    leftTitles: AxisTitles(
-                                      sideTitles: SideTitles(
-                                        showTitles: true,
-                                        getTitlesWidget: (
-                                          double value,
-                                          TitleMeta meta,
-                                        ) {
-                                          return SideTitleWidget(
-                                            meta: meta,
-                                            space: 6,
-                                            child: Text(
-                                              '${value.toInt()} ml',
-                                              style: GoogleFonts.poppins(
-                                                fontSize: 12,
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                        reservedSize: 40,
-                                      ),
-                                    ),
-                                    topTitles: const AxisTitles(
-                                      sideTitles: SideTitles(showTitles: false),
-                                    ),
-                                    rightTitles: const AxisTitles(
-                                      sideTitles: SideTitles(showTitles: false),
-                                    ),
-                                  ),
-                                  gridData: FlGridData(
-                                    show: true,
-                                    drawVerticalLine: false,
-                                    horizontalInterval: 500,
-                                    getDrawingHorizontalLine: (value) {
-                                      return FlLine(
-                                        color: Colors.grey.withOpacity(0.2),
-                                        strokeWidth: 1,
-                                      );
-                                    },
-                                  ),
-                                  borderData: FlBorderData(show: false),
-                                ),
-                              ),
-                    ),
                   ],
                 ),
               ),
             ),
           ),
+
           const SizedBox(height: 24),
+
+          // Section title with icon
           FadeInUp(
             delay: const Duration(milliseconds: 200),
             controller: (controller) => _animationController,
-            child: Text(
-              'Monthly Trends',
-              style: GoogleFonts.poppins(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.show_chart,
+                    color: Theme.of(context).colorScheme.primary,
+                    size: 18,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  'Monthly Progress',
+                  style: GoogleFonts.poppins(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          // Monthly chart with enhanced design
+          FadeInUp(
+            delay: const Duration(milliseconds: 300),
+            controller: (controller) => _animationController,
+            child: _buildGlassCard(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: SizedBox(
+                  height: 250,
+                  child:
+                      monthData.isEmpty
+                          ? _buildEmptyStateWidget(
+                            'No data for this month',
+                            'Start tracking your water intake to see monthly statistics',
+                          )
+                          : LineChart(
+                            LineChartData(
+                              lineBarsData: [
+                                LineChartBarData(
+                                  spots: _buildMonthlySpots(monthData),
+                                  isCurved: true,
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Theme.of(context).colorScheme.primary,
+                                      const Color(0xFF5AC8FA),
+                                    ],
+                                  ),
+                                  barWidth: 4,
+                                  isStrokeCapRound: true,
+                                  dotData: FlDotData(
+                                    show: true,
+                                    getDotPainter: (
+                                      spot,
+                                      percent,
+                                      barData,
+                                      index,
+                                    ) {
+                                      return FlDotCirclePainter(
+                                        radius: 6,
+                                        color: const Color(0xFF5AC8FA),
+                                        strokeWidth: 2,
+                                        strokeColor: Colors.white,
+                                      );
+                                    },
+                                  ),
+                                  belowBarData: BarAreaData(
+                                    show: true,
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [
+                                        Theme.of(
+                                          context,
+                                        ).colorScheme.primary.withOpacity(0.3),
+                                        Theme.of(context).colorScheme.secondary
+                                            .withOpacity(0.05),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                LineChartBarData(
+                                  spots: List.generate(
+                                    monthData.length,
+                                    (index) => FlSpot(
+                                      index.toDouble(),
+                                      goal.toDouble(),
+                                    ),
+                                  ),
+                                  isCurved: false,
+                                  color: Colors.red.withOpacity(0.5),
+                                  barWidth: 2,
+                                  isStrokeCapRound: true,
+                                  dotData: FlDotData(show: false),
+                                  dashArray: [5, 5],
+                                ),
+                              ],
+                              titlesData: FlTitlesData(
+                                show: true,
+                                bottomTitles: AxisTitles(
+                                  sideTitles: SideTitles(
+                                    showTitles: true,
+                                    getTitlesWidget: (
+                                      double value,
+                                      TitleMeta meta,
+                                    ) {
+                                      if (value.toInt() % 5 == 0) {
+                                        return SideTitleWidget(
+                                          meta: meta,
+                                          space: 6,
+                                          child: Text(
+                                            '${value.toInt() + 1}',
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                      return const SizedBox();
+                                    },
+                                    reservedSize: 32,
+                                  ),
+                                ),
+                                leftTitles: AxisTitles(
+                                  sideTitles: SideTitles(
+                                    showTitles: true,
+                                    getTitlesWidget: (
+                                      double value,
+                                      TitleMeta meta,
+                                    ) {
+                                      return SideTitleWidget(
+                                        meta: meta,
+                                        space: 6,
+                                        child: Text(
+                                          '${value.toInt()} ml',
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    reservedSize: 40,
+                                  ),
+                                ),
+                                topTitles: const AxisTitles(
+                                  sideTitles: SideTitles(showTitles: false),
+                                ),
+                                rightTitles: const AxisTitles(
+                                  sideTitles: SideTitles(showTitles: false),
+                                ),
+                              ),
+                              gridData: FlGridData(
+                                show: true,
+                                drawVerticalLine: false,
+                                horizontalInterval: 500,
+                                getDrawingHorizontalLine: (value) {
+                                  return FlLine(
+                                    color: Colors.grey.withOpacity(0.2),
+                                    strokeWidth: 1,
+                                  );
+                                },
+                              ),
+                              borderData: FlBorderData(show: false),
+                            ),
+                          ),
+                ),
               ),
             ),
           ),
-          const SizedBox(height: 12),
+
+          const SizedBox(height: 24),
+
+          // Section title with icon
           FadeInUp(
-            delay: const Duration(milliseconds: 300),
+            delay: const Duration(milliseconds: 400),
+            controller: (controller) => _animationController,
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.analytics,
+                    color: Theme.of(context).colorScheme.primary,
+                    size: 18,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  'Monthly Trends',
+                  style: GoogleFonts.poppins(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          // Monthly trends with enhanced design
+          FadeInUp(
+            delay: const Duration(milliseconds: 500),
             controller: (controller) => _animationController,
             child: _buildGlassCard(
               child: Padding(
@@ -766,7 +1199,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                       Icons.trending_up,
                       Theme.of(context).colorScheme.primary,
                     ),
-                    const Divider(height: 1, color: Colors.grey),
+                    const Divider(height: 24, thickness: 1),
                     _buildTrendTile(
                       context,
                       'Most Active Time',
@@ -774,7 +1207,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                       Icons.access_time,
                       Colors.orange,
                     ),
-                    const Divider(height: 1, color: Colors.grey),
+                    const Divider(height: 24, thickness: 1),
                     _buildTrendTile(
                       context,
                       'Longest Streak',
@@ -787,6 +1220,8 @@ class _StatisticsScreenState extends State<StatisticsScreen>
               ),
             ),
           ),
+
+          const SizedBox(height: 20),
         ],
       ),
     );
@@ -799,7 +1234,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
         borderRadius: BorderRadius.circular(20),
         color:
             isDarkMode
-                ? Colors.grey[800]!.withOpacity(0.3)
+                ? Colors.grey[850]!.withOpacity(0.3)
                 : Colors.white.withOpacity(0.7),
         boxShadow: [
           BoxShadow(
@@ -825,6 +1260,46 @@ class _StatisticsScreenState extends State<StatisticsScreen>
     );
   }
 
+  Widget _buildProgressCircle(int percentage) {
+    final color =
+        percentage >= 100
+            ? Colors.green
+            : percentage >= 70
+            ? Theme.of(context).colorScheme.primary
+            : percentage >= 50
+            ? Colors.orange
+            : Colors.red;
+
+    return SizedBox(
+      width: 60,
+      height: 60,
+      child: Stack(
+        children: [
+          SizedBox(
+            width: 60,
+            height: 60,
+            child: CircularProgressIndicator(
+              value: percentage / 100,
+              strokeWidth: 8,
+              backgroundColor: color.withOpacity(0.2),
+              valueColor: AlwaysStoppedAnimation<Color>(color),
+            ),
+          ),
+          Center(
+            child: Text(
+              '$percentage%',
+              style: GoogleFonts.poppins(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildAnimatedStatItem(
     BuildContext context,
     String value,
@@ -841,7 +1316,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
               gradient: LinearGradient(
                 colors: [
                   Theme.of(context).colorScheme.primary.withOpacity(0.2),
-                  Theme.of(context).colorScheme.secondary.withOpacity(0.2),
+                  const Color(0xFF5AC8FA).withOpacity(0.2),
                 ],
               ),
               shape: BoxShape.circle,
@@ -876,6 +1351,47 @@ class _StatisticsScreenState extends State<StatisticsScreen>
     );
   }
 
+  Widget _buildWhiteStatItem(String value, String label, IconData icon) {
+    return ElasticIn(
+      controller: (controller) => _animationController,
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Icon(icon, color: Colors.white, size: 28),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            value,
+            style: GoogleFonts.poppins(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+            ),
+          ),
+          Text(
+            label,
+            style: GoogleFonts.poppins(
+              fontSize: 12,
+              color: Colors.white.withOpacity(0.8),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildTrendTile(
     BuildContext context,
     String title,
@@ -884,8 +1400,13 @@ class _StatisticsScreenState extends State<StatisticsScreen>
     Color iconColor,
   ) {
     return ListTile(
-      leading: CircleAvatar(
-        backgroundColor: iconColor.withOpacity(0.2),
+      contentPadding: EdgeInsets.zero,
+      leading: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: iconColor.withOpacity(0.2),
+          shape: BoxShape.circle,
+        ),
         child: Icon(icon, color: iconColor, size: 24),
       ),
       title: Text(
@@ -899,15 +1420,109 @@ class _StatisticsScreenState extends State<StatisticsScreen>
     );
   }
 
+  Widget _buildInsightTile(
+    BuildContext context,
+    String title,
+    String subtitle,
+    IconData icon,
+    Color iconColor,
+  ) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: iconColor.withOpacity(0.2),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: iconColor, size: 24),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                ),
+              ),
+              Text(
+                subtitle,
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  color: Colors.grey[600],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmptyStateWidget(String title, String subtitle) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final screenWidth = MediaQuery.of(context).size.width;
+        final isLargeScreen = screenWidth > 600;
+        final lottieSize =
+            isLargeScreen ? 120.0 : 80.0; // Scale placeholder size
+        final titleFontSize = isLargeScreen ? 18.0 : 14.0;
+        final subtitleFontSize = isLargeScreen ? 16.0 : 12.0;
+        final spacing = isLargeScreen ? 12.0 : 8.0;
+
+        return Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              height: lottieSize,
+              width: lottieSize,
+              // Placeholder for Lottie animation (URL missing in code)
+              child: Container(
+                color: Colors.grey.withOpacity(0.1), // Visual placeholder
+                child: const Center(
+                  child: Icon(Icons.water_drop, size: 40, color: Colors.grey),
+                ),
+              ),
+            ),
+            SizedBox(height: spacing),
+            Text(
+              title,
+              style: GoogleFonts.poppins(
+                fontSize: titleFontSize,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[600],
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: spacing / 2),
+            Text(
+              subtitle,
+              style: GoogleFonts.poppins(
+                fontSize: subtitleFontSize,
+                color: Colors.grey[500],
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   List<PieChartSectionData> _buildPieChartSections(
     Map<DrinkType, int> distribution,
+    BuildContext context, // Added context for MediaQuery
   ) {
     final List<PieChartSectionData> sections = [];
     final colors = {
-      DrinkType.water: Colors.blue[400]!,
-      DrinkType.coffee: Colors.brown[400]!,
-      DrinkType.tea: Colors.green[400]!,
-      DrinkType.juice: Colors.orange[400]!,
+      DrinkType.water: const Color(0xFF5AC8FA),
+      DrinkType.coffee: const Color(0xFFBF8970),
+      DrinkType.tea: const Color(0xFF7ED957),
+      DrinkType.juice: const Color(0xFFFFB74D),
     };
 
     final labels = {
@@ -917,6 +1532,12 @@ class _StatisticsScreenState extends State<StatisticsScreen>
       DrinkType.juice: 'Juice',
     };
 
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isLargeScreen = screenWidth > 600;
+    final radius = isLargeScreen ? 40.0 : 25.0; // Scale radius
+    final fontSize = isLargeScreen ? 16.0 : 12.0; // Scale font
+    final badgeOffset = isLargeScreen ? 1.4 : 1.2; // Adjust badge position
+
     final total = distribution.values.fold(0, (sum, amount) => sum + amount);
 
     distribution.forEach((type, amount) {
@@ -924,16 +1545,20 @@ class _StatisticsScreenState extends State<StatisticsScreen>
       sections.add(
         PieChartSectionData(
           value: amount.toDouble(),
-          title: '$percentage%',
+          title:
+              '${labels[type]} $percentage%', // Added drink name with percentage
           color: colors[type],
-          radius: 90,
+          radius: radius,
           titleStyle: GoogleFonts.poppins(
-            fontSize: 14,
+            fontSize: fontSize,
             fontWeight: FontWeight.w700,
             color: Colors.white,
           ),
-          badgeWidget: _Badge(labels[type] ?? '', colors[type]!),
-          badgePositionPercentageOffset: 1.3,
+          badgeWidget: _Badge(
+            '${labels[type]} $percentage%',
+            colors[type]!,
+          ), // Updated badge with percentage
+          badgePositionPercentageOffset: badgeOffset,
         ),
       );
     });
@@ -943,8 +1568,13 @@ class _StatisticsScreenState extends State<StatisticsScreen>
 
   List<BarChartGroupData> _buildHourlyBarGroups(
     Map<int, int> hourlyConsumption,
+    BuildContext context, // Added context for MediaQuery
   ) {
     final List<BarChartGroupData> groups = [];
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isLargeScreen = screenWidth > 600;
+    final barWidth = isLargeScreen ? 22.0 : 14.0; // Scale bar width
+    final borderRadius = isLargeScreen ? 8.0 : 4.0; // Scale border radius
 
     hourlyConsumption.forEach((hour, amount) {
       groups.add(
@@ -956,13 +1586,13 @@ class _StatisticsScreenState extends State<StatisticsScreen>
               gradient: LinearGradient(
                 colors: [
                   Theme.of(context).colorScheme.primary,
-                  Theme.of(context).colorScheme.secondary,
+                  const Color(0xFF5AC8FA),
                 ],
               ),
-              width: 18,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(6),
-                topRight: Radius.circular(6),
+              width: barWidth,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(borderRadius),
+                topRight: Radius.circular(borderRadius),
               ),
             ),
           ],
@@ -999,7 +1629,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                         ? [Colors.green[400]!, Colors.green[600]!]
                         : [
                           Theme.of(context).colorScheme.primary,
-                          Theme.of(context).colorScheme.secondary,
+                          const Color(0xFF5AC8FA),
                         ],
               ),
               width: 22,
@@ -1060,6 +1690,62 @@ class _StatisticsScreenState extends State<StatisticsScreen>
     return '${DateFormat('MMMM d').format(bestDay)} with $maxAmount ml';
   }
 
+  String _getBestDayOfWeek(List<Map<String, dynamic>> weekData) {
+    if (weekData.isEmpty || weekData.every((day) => day['amount'] == 0)) {
+      return 'No data available';
+    }
+
+    int maxAmount = 0;
+    int maxDayIndex = 0;
+
+    for (int i = 0; i < weekData.length; i++) {
+      final amount = weekData[i]['amount'] as int;
+      if (amount > maxAmount) {
+        maxAmount = amount;
+        maxDayIndex = i;
+      }
+    }
+
+    final days = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday',
+    ];
+    return '${days[maxDayIndex]} with $maxAmount ml';
+  }
+
+  String _getWorstDayOfWeek(List<Map<String, dynamic>> weekData) {
+    if (weekData.isEmpty || weekData.every((day) => day['amount'] == 0)) {
+      return 'No data available';
+    }
+
+    int minAmount = weekData.first['amount'] as int;
+    int minDayIndex = 0;
+
+    for (int i = 0; i < weekData.length; i++) {
+      final amount = weekData[i]['amount'] as int;
+      if (amount < minAmount) {
+        minAmount = amount;
+        minDayIndex = i;
+      }
+    }
+
+    final days = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday',
+    ];
+    return '${days[minDayIndex]} with only $minAmount ml';
+  }
+
   String _getMostActiveTime(WaterProvider waterProvider) {
     final allDrinks = waterProvider.drinks;
     if (allDrinks.isEmpty) return 'No data available';
@@ -1105,6 +1791,64 @@ class _StatisticsScreenState extends State<StatisticsScreen>
     }
 
     return '$maxStreak days in a row';
+  }
+
+  int _getCurrentWeeklyStreak(List<Map<String, dynamic>> weekData, int goal) {
+    if (weekData.isEmpty) return 0;
+
+    int currentStreak = 0;
+
+    // Count from the end (most recent days first)
+    for (int i = weekData.length - 1; i >= 0; i--) {
+      final amount = weekData[i]['amount'] as int;
+      if (amount >= goal) {
+        currentStreak++;
+      } else {
+        break;
+      }
+    }
+
+    return currentStreak;
+  }
+
+  String _generateMonthlySummary(
+    List<Map<String, dynamic>> monthData,
+    int goal,
+    int average,
+  ) {
+    if (monthData.isEmpty) {
+      return "You haven't tracked your hydration this month yet. Start adding your water intake to see your monthly summary.";
+    }
+
+    final goalDays =
+        monthData.where((day) => (day['amount'] as int) >= goal).length;
+    final totalDays = monthData.length;
+    final goalPercentage = (goalDays / totalDays * 100).round();
+
+    String summary = '';
+
+    if (goalPercentage >= 80) {
+      summary =
+          "Excellent job this month! You've reached your daily hydration goal on $goalDays out of $totalDays days ($goalPercentage%). Your average daily intake was $average ml, which is ";
+    } else if (goalPercentage >= 50) {
+      summary =
+          "Good progress this month! You've reached your daily hydration goal on $goalDays out of $totalDays days ($goalPercentage%). Your average daily intake was $average ml, which is ";
+    } else {
+      summary =
+          "You're making progress, but there's room for improvement. You've reached your daily hydration goal on $goalDays out of $totalDays days ($goalPercentage%). Your average daily intake was $average ml, which is ";
+    }
+
+    if (average >= goal) {
+      summary += "above your daily goal of $goal ml. Keep up the great work!";
+    } else if (average >= goal * 0.8) {
+      summary +=
+          "close to your daily goal of $goal ml. You're on the right track!";
+    } else {
+      summary +=
+          "below your daily goal of $goal ml. Try setting reminders to drink more water throughout the day.";
+    }
+
+    return summary;
   }
 }
 

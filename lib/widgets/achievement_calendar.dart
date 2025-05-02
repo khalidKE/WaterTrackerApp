@@ -8,6 +8,14 @@ class AchievementCalendar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Get screen size and orientation
+    final size = MediaQuery.of(context).size;
+    final isLandscape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
+    final padding = size.width * 0.04; // Dynamic padding (4% of screen width)
+    final gridItemSize =
+        size.width / (isLandscape ? 10 : 8); // Adjust grid size for orientation
+
     return Consumer<WaterProvider>(
       builder: (context, waterProvider, child) {
         final now = DateTime.now();
@@ -26,24 +34,30 @@ class AchievementCalendar extends StatelessWidget {
         return Card(
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(
+              size.width * 0.04,
+            ), // Responsive border radius
           ),
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: EdgeInsets.all(padding),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   DateFormat('MMMM yyyy').format(now),
-                  style: Theme.of(context).textTheme.titleMedium,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontSize: size.width * 0.05, // Responsive font size
+                  ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: padding),
                 GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 7,
                     childAspectRatio: 1,
+                    crossAxisSpacing: padding * 0.5,
+                    mainAxisSpacing: padding * 0.5,
                   ),
                   itemCount: daysInMonth,
                   itemBuilder: (context, index) {
@@ -53,7 +67,7 @@ class AchievementCalendar extends StatelessWidget {
                     final isPast = day < now.day;
 
                     return Container(
-                      margin: const EdgeInsets.all(2),
+                      margin: EdgeInsets.all(padding * 0.2),
                       decoration: BoxDecoration(
                         color:
                             isAchieved
@@ -61,9 +75,11 @@ class AchievementCalendar extends StatelessWidget {
                                   context,
                                 ).colorScheme.primary.withOpacity(0.7)
                                 : isPast
-                                ? Theme.of(context).colorScheme.surfaceContainerHighest
+                                ? Theme.of(
+                                  context,
+                                ).colorScheme.surfaceContainerHighest
                                 : Colors.transparent,
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(padding * 0.5),
                         border:
                             isToday
                                 ? Border.all(
@@ -83,38 +99,49 @@ class AchievementCalendar extends StatelessWidget {
                           style: TextStyle(
                             color: isAchieved ? Colors.white : null,
                             fontWeight: isToday ? FontWeight.bold : null,
+                            fontSize: size.width * 0.04, // Responsive text size
                           ),
                         ),
                       ),
                     );
                   },
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: padding),
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     Container(
-                      width: 16,
-                      height: 16,
+                      width: size.width * 0.04,
+                      height: size.width * 0.04,
                       decoration: BoxDecoration(
                         color: Theme.of(
                           context,
                         ).colorScheme.primary.withOpacity(0.7),
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: BorderRadius.circular(padding * 0.25),
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    const Text('Goal achieved'),
-                    const SizedBox(width: 16),
+                    SizedBox(width: padding * 0.5),
+                    Text(
+                      'Achieved',
+                      style: TextStyle(fontSize: size.width * 0.035),
+                    ),
+                    SizedBox(width: padding),
                     Container(
-                      width: 16,
-                      height: 16,
+                      width: size.width * 0.04,
+                      height: size.width * 0.04,
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(4),
+                        color:
+                            Theme.of(
+                              context,
+                            ).colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(padding * 0.25),
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    const Text('Goal not achieved'),
+                    SizedBox(width: padding * 0.5),
+                    Text(
+                      'Not achieved',
+                      style: TextStyle(fontSize: size.width * 0.035),
+                    ),
                   ],
                 ),
               ],
