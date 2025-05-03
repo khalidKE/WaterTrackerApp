@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:water_tracker/screens/SignUp_Screen.dart';
 import 'package:water_tracker/screens/profile_screen.dart';
-
+import 'package:url_launcher/url_launcher.dart';
 import '../providers/theme_provider.dart';
 import '../providers/water_provider.dart';
 import '../services/notification_service.dart';
@@ -17,6 +17,36 @@ class SettingsScreen extends StatelessWidget {
   Color _getIconColor(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return isDarkMode ? Colors.white70 : Theme.of(context).primaryColor;
+  }
+
+  // Method to launch email client
+  Future<void> _launchEmail(BuildContext context) async {
+    final Uri emailUri = Uri(
+      scheme: 'mailto',
+      path: 'abuelhassan179@gmail.com',
+      query: 'subject=Support Request&body=Please describe your issue:',
+    );
+    try {
+      if (await canLaunchUrl(emailUri)) {
+        await launchUrl(emailUri);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Could not launch email client'),
+            backgroundColor: Colors.redAccent,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Error launching email client'),
+          backgroundColor: Colors.redAccent,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
   }
 
   @override
@@ -215,57 +245,8 @@ class SettingsScreen extends StatelessWidget {
                         },
                       ),
                     ),
-
                     // Units Settings
-                    _buildSectionHeader(context, 'Units', MdiIcons.ruler),
-                    _buildCard(
-                      context,
-                      child: Consumer<WaterProvider>(
-                        builder: (context, waterProvider, child) {
-                          return Column(
-                            children: [
-                              RadioListTile<String>(
-                                title: const Text('Milliliters (ml)'),
-                                subtitle: const Text('Metric system'),
-                                value: 'ml',
-                                groupValue: waterProvider.unit,
-                                activeColor: _getIconColor(context),
-                                onChanged: (value) {
-                                  HapticFeedback.lightImpact();
-                                  if (value != null) {
-                                    waterProvider.setUnit(value);
-                                  }
-                                },
-                                secondary: Icon(
-                                  MdiIcons.water,
-                                  color: _getIconColor(context),
-                                ),
-                              ),
-                              RadioListTile<String>(
-                                title: const Text('Fluid Ounces (oz)'),
-                                subtitle: const Text('Imperial system'),
-                                value: 'oz',
-                                groupValue: waterProvider.unit,
-                                activeColor: _getIconColor(context),
-                                onChanged: (value) {
-                                  HapticFeedback.lightImpact();
-                                  if (value != null) {
-                                    waterProvider.setUnit(value);
-                                  }
-                                },
-                                secondary: Icon(
-                                  MdiIcons.water,
-                                  color: _getIconColor(context),
-                                ),
-                              ),
-                            ],
-                          );
-                        },
-                      ),
-                    ),
-                    // App Settings
                     _buildSectionHeader(context, 'App Settings', MdiIcons.cog),
-
                     _buildCard(
                       context,
                       child: ListTile(
@@ -308,7 +289,8 @@ class SettingsScreen extends StatelessWidget {
                                           context,
                                           MaterialPageRoute(
                                             builder:
-                                                (context) => const SignupScreen(),
+                                                (context) =>
+                                                    const SignupScreen(),
                                           ),
                                           (route) => false,
                                         );
@@ -357,12 +339,18 @@ class SettingsScreen extends StatelessWidget {
                             ),
                             onTap: () {
                               HapticFeedback.lightImpact();
-                              // Open privacy policy
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) => const PrivacyPolicyScreen(),
+                                ),
+                              );
                             },
                           ),
                           ListTile(
                             title: const Text(
-                              'Terms of Service',
+                              'Support',
                               style: TextStyle(fontWeight: FontWeight.w600),
                             ),
                             trailing: Icon(
@@ -376,7 +364,23 @@ class SettingsScreen extends StatelessWidget {
                             ),
                             onTap: () {
                               HapticFeedback.lightImpact();
-                              // Open terms of service
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: const Text(
+                                    'Contact support at abuelhassan179@gmail.com',
+                                  ),
+                                  backgroundColor: _getIconColor(context),
+                                  duration: const Duration(seconds: 4),
+                                  action: SnackBarAction(
+                                    label: 'Email',
+                                    textColor:
+                                        isDarkMode
+                                            ? Colors.black
+                                            : Colors.white,
+                                    onPressed: () => _launchEmail(context),
+                                  ),
+                                ),
+                              );
                             },
                           ),
                         ],
@@ -422,6 +426,68 @@ class SettingsScreen extends StatelessWidget {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(12),
           child: Material(color: Theme.of(context).cardColor, child: child),
+        ),
+      ),
+    );
+  }
+}
+
+// Privacy Policy Screen
+class PrivacyPolicyScreen extends StatelessWidget {
+  const PrivacyPolicyScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'Privacy Policy',
+          style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.w500),
+        ),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: SingleChildScrollView(
+          child: Text('''
+Privacy Policy
+
+Last updated: May 3, 2025
+
+Your privacy is important to us. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our Water Tracker application.
+
+1. Information We Collect
+We may collect the following types of information:
+- Personal Information: Name, email address, and other information you provide during registration.
+- Usage Data: Information about how you use the app, such as water intake logs and notification preferences.
+- Device Information: Device type, operating system, and unique device identifiers.
+
+2. How We Use Your Information
+We use the collected information to:
+- Provide and improve the app's functionality.
+- Send you reminders and notifications to stay hydrated.
+- Analyze app usage to enhance user experience.
+
+3. Sharing Your Information
+We do not share your personal information with third parties except:
+- With your consent.
+- To comply with legal obligations.
+- To protect our rights and safety.
+
+4. Data Security
+We implement reasonable security measures to protect your information. However, no method of transmission over the internet is 100% secure.
+
+5. Your Choices
+You can:
+- Update your profile information.
+- Opt-out of notifications in the app settings.
+- Request deletion of your account by contacting support.
+
+6. Changes to This Privacy Policy
+We may update this policy from time to time. We will notify you of any changes by posting the new policy in the app.
+
+7. Contact Us
+If you have any questions about this Privacy Policy, please contact us at abuelhassan179@gmail.com.
+            ''', style: GoogleFonts.poppins(fontSize: 16, height: 1.5)),
         ),
       ),
     );

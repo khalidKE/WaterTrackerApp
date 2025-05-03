@@ -490,6 +490,8 @@ class _LoginScreenState extends State<LoginScreen>
 
 // Animated loading button for login
 class LoadingAnimatedButton extends StatelessWidget {
+  const LoadingAnimatedButton({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Row(
