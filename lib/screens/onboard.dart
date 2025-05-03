@@ -24,7 +24,12 @@ class _OnBoardingScreenState extends State<OnBoardingScreen>
   // Updated water-themed colors for Hydromate
   final Color _primaryColor = const Color(0xFF2196F3); // Vibrant water blue
   final Color _secondaryColor = const Color(0xFFE3F2FD); // Soft blue background
-  final Color _accentColor = const Color.fromARGB(255, 3, 27, 39); // Light blue accent
+  final Color _accentColor = const Color.fromARGB(
+    255,
+    44,
+    120,
+    158,
+  ); // Light blue accent
   final Color _lightColor = const Color(0xFFFFFFFF); // White
   final Color _darkAccentColor = const Color(0xFF1565C0); // Deep blue
 
@@ -39,7 +44,6 @@ class _OnBoardingScreenState extends State<OnBoardingScreen>
     {
       'animationPath': 'images/goals.png', // Update to actual .png file path
       'title': 'SET YOUR GOALS',
-      'subtitle': 'Tailored Hydration',
       'description':
           'Customize your daily water intake based on your lifestyle, body, and environment for optimal hydration.',
       'iconData': Icons.water_drop,
@@ -48,7 +52,6 @@ class _OnBoardingScreenState extends State<OnBoardingScreen>
     {
       'animationPath': 'images/alerts.png', // Update to actual .png file path
       'title': 'SMART ALERTS',
-      'subtitle': 'Stay on Track',
       'description':
           'Get personalized reminders that adapt to your schedule and drinking habits to keep you hydrated.',
       'iconData': Icons.notifications_active,
@@ -56,8 +59,7 @@ class _OnBoardingScreenState extends State<OnBoardingScreen>
     },
     {
       'animationPath': 'images/tracking.gif', // Update to actual .png file path
-      'title': 'INSIGHTFUL TRACKING',
-      'subtitle': 'Visualize Progress',
+      'title': 'TRACKING',
       'description':
           'Monitor your hydration journey with intuitive charts and detailed analytics to stay motivated.',
       'iconData': Icons.bar_chart,
@@ -66,7 +68,6 @@ class _OnBoardingScreenState extends State<OnBoardingScreen>
     {
       'animationPath': 'images/wellness.png', // Update to actual .png file path
       'title': 'ENHANCE WELLNESS',
-      'subtitle': 'Feel Your Best',
       'description':
           'Learn how proper hydration boosts energy, improves focus, and enhances your overall health.',
       'iconData': Icons.favorite,
@@ -211,388 +212,304 @@ class _OnBoardingScreenState extends State<OnBoardingScreen>
                             child: child,
                           );
                         },
-                        child: SafeArea(
-                          child: Stack(
-                            children: [
-                              BubbleAnimation(
-                                color: currentColor.withOpacity(0.25),
+                        child: Column(
+                          children: [
+                            SizedBox(height: 13.h),
+                            Expanded(
+                              child: PageView.builder(
+                                controller: _controller,
+                                itemCount: _onboardingData.length,
+                                itemBuilder: (context, index) {
+                                  return _buildResponsivePage(
+                                    context,
+                                    animationPath:
+                                        _onboardingData[index]['animationPath'],
+                                    title: _onboardingData[index]['title'],
+
+                                    description:
+                                        _onboardingData[index]['description'],
+                                    iconData:
+                                        _onboardingData[index]['iconData'],
+                                    color: _onboardingData[index]['bgColor'],
+                                    isActive: _currentPage == index,
+                                  );
+                                },
                               ),
-                              Positioned(
-                                top: 25.h,
-                                left: 0,
-                                right: 0,
-                                child: Transform.translate(
-                                  offset: Offset(_touchOffset.dx * 0.5, 0),
-                                  child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Text(
-                                            "HYDROMATE",
-                                            style: GoogleFonts.poppins(
-                                              fontSize:
-                                                  isSmallScreen ? 26.sp : 30.sp,
-                                              fontWeight: FontWeight.w700,
-                                              color: _lightColor,
-                                              letterSpacing: 2.0,
-                                              shadows: [
-                                                Shadow(
-                                                  color: _darkAccentColor
-                                                      .withOpacity(0.3),
-                                                  blurRadius: 8,
-                                                  offset: const Offset(0, 2),
-                                                ),
+                            ),
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: horizontalPadding,
+                                vertical: verticalPadding,
+                              ),
+                              child: Column(
+                                children: [
+                                  SizedBox(
+                                    height: 5.h,
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: List.generate(
+                                        _onboardingData.length,
+                                        (index) => AnimatedContainer(
+                                          duration: const Duration(
+                                            milliseconds: 250,
+                                          ),
+                                          margin: EdgeInsets.symmetric(
+                                            horizontal: 5.w,
+                                          ),
+                                          height: 5.h,
+                                          width:
+                                              _currentPage == index
+                                                  ? 30.w
+                                                  : 10.w,
+                                          decoration: BoxDecoration(
+                                            gradient: LinearGradient(
+                                              colors: [
+                                                _onboardingData[_currentPage]['bgColor'],
+                                                _accentColor,
                                               ],
                                             ),
+                                            borderRadius: BorderRadius.circular(
+                                              5.r,
+                                            ),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color:
+                                                    _onboardingData[_currentPage]['bgColor']
+                                                        .withOpacity(0.4),
+                                                blurRadius: 8,
+                                                offset: const Offset(0, 3),
+                                              ),
+                                            ],
                                           ),
-                                          SizedBox(width: 8.w),
-                                          Icon(
-                                            Icons.water_drop_rounded,
-                                            color: _accentColor,
-                                            size: isSmallScreen ? 26.sp : 30.sp,
-                                          ).animate().scale(
-                                            duration: 1200.ms,
-                                            curve: Curves.easeInOut,
-                                          ),
-                                        ],
-                                      )
-                                      .animate()
-                                      .fadeIn(duration: 900.ms)
-                                      .slideY(
-                                        begin: -0.3,
-                                        end: 0,
-                                        duration: 900.ms,
-                                        curve: Curves.easeOutQuint,
+                                        ),
                                       ),
-                                ),
-                              ),
-                              Column(
-                                children: [
-                                  SizedBox(height: screenHeight * 0.15),
-                                  Expanded(
-                                    child: PageView.builder(
-                                      controller: _controller,
-                                      itemCount: _onboardingData.length,
-                                      itemBuilder: (context, index) {
-                                        return _buildResponsivePage(
-                                          context,
-                                          animationPath:
-                                              _onboardingData[index]['animationPath'],
-                                          title:
-                                              _onboardingData[index]['title'],
-                                          subtitle:
-                                              _onboardingData[index]['subtitle'],
-                                          description:
-                                              _onboardingData[index]['description'],
-                                          iconData:
-                                              _onboardingData[index]['iconData'],
-                                          color:
-                                              _onboardingData[index]['bgColor'],
-                                          isActive: _currentPage == index,
-                                        );
-                                      },
+                                    ).animate().scale(
+                                      duration: 500.ms,
+                                      curve: Curves.easeInOut,
                                     ),
                                   ),
-                                  Container(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: horizontalPadding,
-                                      vertical: verticalPadding,
-                                    ),
-                                    child: Column(
-                                      children: [
-                                        SizedBox(
-                                          height: 10.h,
-                                          child: Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: List.generate(
-                                              _onboardingData.length,
-                                              (index) => AnimatedContainer(
-                                                duration: const Duration(
-                                                  milliseconds: 250,
+                                  SizedBox(height: isSmallScreen ? 25.h : 35.h),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      GestureDetector(
+                                        onTap:
+                                            _isNavigating
+                                                ? null
+                                                : () {
+                                                  HapticFeedback.lightImpact();
+                                                  _buttonAnimationController
+                                                      .forward(from: 0.0);
+                                                  _navigateToLogin();
+                                                },
+                                        child: AnimatedBuilder(
+                                          animation: _buttonAnimationController,
+                                          builder: (context, child) {
+                                            return Transform.scale(
+                                              scale:
+                                                  1.0 -
+                                                  (_buttonAnimationController
+                                                          .value *
+                                                      0.1),
+                                              child: Container(
+                                                padding: EdgeInsets.symmetric(
+                                                  horizontal: 20.w,
+                                                  vertical: 12.h,
                                                 ),
-                                                margin: EdgeInsets.symmetric(
-                                                  horizontal: 5.w,
-                                                ),
-                                                height: 10.h,
-                                                width:
-                                                    _currentPage == index
-                                                        ? 30.w
-                                                        : 10.w,
                                                 decoration: BoxDecoration(
-                                                  gradient: LinearGradient(
-                                                    colors: [
-                                                      _onboardingData[_currentPage]['bgColor'],
-                                                      _accentColor,
-                                                    ],
-                                                  ),
+                                                  color: _lightColor
+                                                      .withOpacity(0.2),
                                                   borderRadius:
                                                       BorderRadius.circular(
-                                                        5.r,
+                                                        12.r,
                                                       ),
-                                                  boxShadow: [
-                                                    BoxShadow(
-                                                      color:
-                                                          _onboardingData[_currentPage]['bgColor']
-                                                              .withOpacity(0.4),
-                                                      blurRadius: 8,
-                                                      offset: const Offset(
-                                                        0,
-                                                        3,
-                                                      ),
-                                                    ),
-                                                  ],
+                                                  border: Border.all(
+                                                    color: _lightColor
+                                                        .withOpacity(0.3),
+                                                  ),
+                                                ),
+                                                child: Text(
+                                                  "SKIP",
+                                                  style: GoogleFonts.poppins(
+                                                    fontSize:
+                                                        isSmallScreen
+                                                            ? 15.sp
+                                                            : 16.sp,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: _lightColor,
+                                                    letterSpacing: 1.5,
+                                                  ),
                                                 ),
                                               ),
-                                            ),
-                                          ).animate().scale(
-                                            duration: 500.ms,
-                                            curve: Curves.easeInOut,
-                                          ),
+                                            );
+                                          },
+                                        ).animate().fadeIn(
+                                          duration: 900.ms,
+                                          delay: 300.ms,
                                         ),
-                                        SizedBox(
-                                          height: isSmallScreen ? 25.h : 35.h,
-                                        ),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            GestureDetector(
-                                              onTap:
-                                                  _isNavigating
-                                                      ? null
-                                                      : () {
-                                                        HapticFeedback.lightImpact();
-                                                        _buttonAnimationController
-                                                            .forward(from: 0.0);
-                                                        _navigateToLogin();
-                                                      },
-                                              child: AnimatedBuilder(
-                                                animation:
-                                                    _buttonAnimationController,
-                                                builder: (context, child) {
-                                                  return Transform.scale(
-                                                    scale:
-                                                        1.0 -
-                                                        (_buttonAnimationController
-                                                                .value *
-                                                            0.1),
-                                                    child: Container(
-                                                      padding:
-                                                          EdgeInsets.symmetric(
-                                                            horizontal: 20.w,
-                                                            vertical: 12.h,
-                                                          ),
-                                                      decoration: BoxDecoration(
-                                                        color: _lightColor
-                                                            .withOpacity(0.2),
-                                                        borderRadius:
-                                                            BorderRadius.circular(
-                                                              12.r,
-                                                            ),
-                                                        border: Border.all(
-                                                          color: _lightColor
-                                                              .withOpacity(0.3),
-                                                        ),
+                                      ),
+                                      GestureDetector(
+                                        onTap:
+                                            _isNavigating
+                                                ? null
+                                                : () {
+                                                  HapticFeedback.lightImpact();
+                                                  _buttonAnimationController
+                                                      .forward(from: 0.0);
+                                                  if (_currentPage ==
+                                                      _onboardingData.length -
+                                                          1) {
+                                                    _navigateToLogin();
+                                                  } else {
+                                                    _controller.nextPage(
+                                                      duration: const Duration(
+                                                        milliseconds: 400,
                                                       ),
-                                                      child: Text(
-                                                        "SKIP",
-                                                        style:
-                                                            GoogleFonts.poppins(
-                                                              fontSize:
-                                                                  isSmallScreen
-                                                                      ? 15.sp
-                                                                      : 16.sp,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w600,
-                                                              color:
-                                                                  _lightColor,
-                                                              letterSpacing:
-                                                                  1.5,
-                                                            ),
-                                                      ),
-                                                    ),
-                                                  );
+                                                      curve:
+                                                          Curves.easeOutQuint,
+                                                    );
+                                                  }
                                                 },
-                                              ).animate().fadeIn(
-                                                duration: 900.ms,
-                                                delay: 300.ms,
-                                              ),
-                                            ),
-                                            GestureDetector(
-                                              onTap:
-                                                  _isNavigating
-                                                      ? null
-                                                      : () {
-                                                        HapticFeedback.lightImpact();
-                                                        _buttonAnimationController
-                                                            .forward(from: 0.0);
-                                                        if (_currentPage ==
-                                                            _onboardingData
-                                                                    .length -
-                                                                1) {
-                                                          _navigateToLogin();
-                                                        } else {
-                                                          _controller.nextPage(
-                                                            duration:
-                                                                const Duration(
-                                                                  milliseconds:
-                                                                      400,
-                                                                ),
-                                                            curve:
-                                                                Curves
-                                                                    .easeOutQuint,
-                                                          );
-                                                        }
-                                                      },
-                                              child: AnimatedBuilder(
-                                                    animation:
-                                                        _buttonAnimationController,
-                                                    builder: (context, child) {
-                                                      return Transform.scale(
-                                                        scale:
-                                                            1.0 -
-                                                            (_buttonAnimationController
-                                                                    .value *
-                                                                0.05),
-                                                        child: Container(
-                                                          decoration: BoxDecoration(
-                                                            gradient: LinearGradient(
-                                                              colors: [
-                                                                _onboardingData[_currentPage]['bgColor'],
-                                                                _accentColor,
-                                                              ],
-                                                            ),
-                                                            borderRadius:
-                                                                BorderRadius.circular(
-                                                                  40.r,
-                                                                ),
-                                                            boxShadow: [
-                                                              BoxShadow(
-                                                                color: _onboardingData[_currentPage]['bgColor']
-                                                                    .withOpacity(
-                                                                      0.5,
-                                                                    ),
-                                                                blurRadius: 15,
-                                                                offset:
-                                                                    const Offset(
-                                                                      0,
-                                                                      5,
+                                        child: AnimatedBuilder(
+                                              animation:
+                                                  _buttonAnimationController,
+                                              builder: (context, child) {
+                                                return Transform.scale(
+                                                  scale:
+                                                      1.0 -
+                                                      (_buttonAnimationController
+                                                              .value *
+                                                          0.05),
+                                                  child: Container(
+                                                    decoration: BoxDecoration(
+                                                      gradient: LinearGradient(
+                                                        colors: [
+                                                          _onboardingData[_currentPage]['bgColor'],
+                                                          _accentColor,
+                                                        ],
+                                                      ),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            40.r,
+                                                          ),
+                                                      boxShadow: [
+                                                        BoxShadow(
+                                                          color:
+                                                              _onboardingData[_currentPage]['bgColor']
+                                                                  .withOpacity(
+                                                                    0.5,
+                                                                  ),
+                                                          blurRadius: 15,
+                                                          offset: const Offset(
+                                                            0,
+                                                            5,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    padding: EdgeInsets.symmetric(
+                                                      horizontal:
+                                                          _currentPage ==
+                                                                  _onboardingData
+                                                                          .length -
+                                                                      1
+                                                              ? 35.w
+                                                              : 28.w,
+                                                      vertical:
+                                                          isSmallScreen
+                                                              ? 14.h
+                                                              : 18.h,
+                                                    ),
+                                                    child:
+                                                        _isNavigating
+                                                            ? SizedBox(
+                                                              width: 24.w,
+                                                              height: 24.h,
+                                                              child: CircularProgressIndicator(
+                                                                strokeWidth:
+                                                                    2.5,
+                                                                valueColor:
+                                                                    AlwaysStoppedAnimation<
+                                                                      Color
+                                                                    >(
+                                                                      _lightColor,
                                                                     ),
                                                               ),
-                                                            ],
-                                                          ),
-                                                          padding: EdgeInsets.symmetric(
-                                                            horizontal:
-                                                                _currentPage ==
-                                                                        _onboardingData.length -
-                                                                            1
-                                                                    ? 35.w
-                                                                    : 28.w,
-                                                            vertical:
-                                                                isSmallScreen
-                                                                    ? 14.h
-                                                                    : 18.h,
-                                                          ),
-                                                          child:
-                                                              _isNavigating
-                                                                  ? SizedBox(
-                                                                    width: 24.w,
-                                                                    height:
-                                                                        24.h,
-                                                                    child: CircularProgressIndicator(
-                                                                      strokeWidth:
-                                                                          2.5,
-                                                                      valueColor:
-                                                                          AlwaysStoppedAnimation<
-                                                                            Color
-                                                                          >(
-                                                                            _lightColor,
-                                                                          ),
-                                                                    ),
-                                                                  )
-                                                                  : Row(
-                                                                    mainAxisSize:
-                                                                        MainAxisSize
-                                                                            .min,
-                                                                    children: [
-                                                                      Text(
-                                                                        _currentPage ==
-                                                                                _onboardingData.length -
-                                                                                    1
-                                                                            ? "START NOW"
-                                                                            : "NEXT",
-                                                                        style: GoogleFonts.poppins(
-                                                                          fontSize:
-                                                                              isSmallScreen
-                                                                                  ? 14.sp
-                                                                                  : 16.sp,
-                                                                          color:
-                                                                              _lightColor,
-                                                                          fontWeight:
-                                                                              FontWeight.w700,
-                                                                          letterSpacing:
-                                                                              1.5,
-                                                                        ),
-                                                                      ),
-                                                                      SizedBox(
-                                                                        width:
-                                                                            10.w,
-                                                                      ),
-                                                                      Icon(
-                                                                        _currentPage ==
-                                                                                _onboardingData.length -
-                                                                                    1
-                                                                            ? Icons.play_circle_fill
-                                                                            : Icons.arrow_forward_rounded,
-                                                                        color:
-                                                                            _lightColor,
-                                                                        size:
-                                                                            isSmallScreen
-                                                                                ? 18.sp
-                                                                                : 20.sp,
-                                                                      ),
-                                                                    ],
+                                                            )
+                                                            : Row(
+                                                              mainAxisSize:
+                                                                  MainAxisSize
+                                                                      .min,
+                                                              children: [
+                                                                Text(
+                                                                  _currentPage ==
+                                                                          _onboardingData.length -
+                                                                              1
+                                                                      ? "START NOW"
+                                                                      : "NEXT",
+                                                                  style: GoogleFonts.poppins(
+                                                                    fontSize:
+                                                                        isSmallScreen
+                                                                            ? 14.sp
+                                                                            : 16.sp,
+                                                                    color:
+                                                                        _lightColor,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .w700,
+                                                                    letterSpacing:
+                                                                        1.5,
                                                                   ),
-                                                        ),
-                                                      );
-                                                    },
-                                                  )
-                                                  .animate()
-                                                  .scale(
-                                                    duration: 900.ms,
-                                                    delay: 400.ms,
-                                                    curve: Curves.easeOut,
-                                                  )
-                                                  .animate(
-                                                    onPlay:
-                                                        (controller) =>
-                                                            controller.repeat(
-                                                              reverse: true,
+                                                                ),
+                                                                SizedBox(
+                                                                  width: 10.w,
+                                                                ),
+                                                                Icon(
+                                                                  _currentPage ==
+                                                                          _onboardingData.length -
+                                                                              1
+                                                                      ? Icons
+                                                                          .play_circle_fill
+                                                                      : Icons
+                                                                          .arrow_forward_rounded,
+                                                                  color:
+                                                                      _lightColor,
+                                                                  size:
+                                                                      isSmallScreen
+                                                                          ? 18.sp
+                                                                          : 20.sp,
+                                                                ),
+                                                              ],
                                                             ),
-                                                  )
-                                                  .scale(
-                                                    duration: 1800.ms,
-                                                    begin: const Offset(
-                                                      1.0,
-                                                      1.0,
-                                                    ),
-                                                    end: const Offset(
-                                                      1.06,
-                                                      1.06,
-                                                    ),
                                                   ),
+                                                );
+                                              },
+                                            )
+                                            .animate()
+                                            .scale(
+                                              duration: 900.ms,
+                                              delay: 400.ms,
+                                              curve: Curves.easeOut,
+                                            )
+                                            .animate(
+                                              onPlay:
+                                                  (controller) => controller
+                                                      .repeat(reverse: true),
+                                            )
+                                            .scale(
+                                              duration: 1800.ms,
+                                              begin: const Offset(1.0, 1.0),
+                                              end: const Offset(1.06, 1.06),
                                             ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -610,7 +527,6 @@ class _OnBoardingScreenState extends State<OnBoardingScreen>
     BuildContext context, {
     required String animationPath,
     required String title,
-    required String subtitle,
     required String description,
     required IconData iconData,
     required Color color,
@@ -651,7 +567,6 @@ class _OnBoardingScreenState extends State<OnBoardingScreen>
                     child: _buildContentSection(
                       context,
                       title: title,
-                      subtitle: subtitle,
                       description: description,
                       color: color,
                       isActive: isActive,
@@ -679,7 +594,6 @@ class _OnBoardingScreenState extends State<OnBoardingScreen>
                   _buildContentSection(
                     context,
                     title: title,
-                    subtitle: subtitle,
                     description: description,
                     color: color,
                     isActive: isActive,
@@ -760,39 +674,6 @@ class _OnBoardingScreenState extends State<OnBoardingScreen>
                     color: color,
                   ),
                 ),
-              if (isActive)
-                Positioned(
-                  bottom: 25,
-                  right: 25,
-                  child: Container(
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [color, _accentColor],
-                          ),
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: color.withOpacity(0.6),
-                              blurRadius: 12,
-                              spreadRadius: 3,
-                            ),
-                          ],
-                        ),
-                        child: Icon(iconData, color: _lightColor, size: 28),
-                      )
-                      .animate()
-                      .scale(duration: 500.ms, curve: Curves.easeOutBack)
-                      .animate(
-                        onPlay:
-                            (controller) => controller.repeat(reverse: true),
-                      )
-                      .scale(
-                        begin: const Offset(1.0, 1.0),
-                        end: const Offset(1.15, 1.15),
-                        duration: 1200.ms,
-                      ),
-                ),
             ],
           ),
         )
@@ -814,7 +695,6 @@ class _OnBoardingScreenState extends State<OnBoardingScreen>
   Widget _buildContentSection(
     BuildContext context, {
     required String title,
-    required String subtitle,
     required String description,
     required Color color,
     required bool isActive,
@@ -863,20 +743,7 @@ class _OnBoardingScreenState extends State<OnBoardingScreen>
             .fadeIn(duration: 900.ms, delay: 200.ms)
             .slideY(begin: 0.3, end: 0, duration: 900.ms),
         SizedBox(height: 15.h),
-        Text(
-              subtitle,
-              textAlign: TextAlign.center,
-              style: GoogleFonts.poppins(
-                fontSize: isSmallScreen ? 17.sp : 19.sp,
-                fontWeight: FontWeight.w600,
-                color: _accentColor,
-                letterSpacing: 0.8,
-              ),
-            )
-            .animate(target: isActive ? 1 : 0)
-            .fadeIn(duration: 900.ms, delay: 300.ms)
-            .slideY(begin: 0.3, end: 0, duration: 900.ms),
-        SizedBox(height: 20.h),
+
         Container(
               padding: EdgeInsets.symmetric(vertical: 18.h, horizontal: 12.w),
               decoration: BoxDecoration(
