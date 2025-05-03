@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../providers/water_provider.dart';
 import '../widgets/goal_calculator.dart';
@@ -66,71 +67,9 @@ class ProfileScreen extends StatelessWidget {
                               Stack(
                                 alignment: Alignment.bottomRight,
                                 children: [
-                                  Container(
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      gradient: LinearGradient(
-                                        colors: [
-                                          colorScheme.primary,
-                                          const Color(0xFF5AC8FA),
-                                        ],
-                                      ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: colorScheme.primary
-                                              .withOpacity(0.3),
-                                          blurRadius: 10,
-                                          offset: const Offset(0, 4),
-                                        ),
-                                      ],
-                                    ),
-                                    padding: const EdgeInsets.all(4),
-                                    child: CircleAvatar(
-                                      radius: 50,
-                                      backgroundColor: Colors.white,
-                                      child: Text(
-                                        'JD',
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 24,
-                                          fontWeight: FontWeight.bold,
-                                          color: colorScheme.primary,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  CircleAvatar(
-                                    radius: 18,
-                                    backgroundColor: colorScheme.primary,
-                                    child: IconButton(
-                                      icon: const Icon(
-                                        Icons.edit,
-                                        size: 16,
-                                        color: Colors.white,
-                                      ),
-                                      onPressed: () {
-                                        // Edit profile
-                                      },
-                                    ),
-                                  ),
+                                  Container(padding: const EdgeInsets.all(4)),
                                 ],
                               ),
-                              const SizedBox(height: 16),
-                              Text(
-                                'John Doe',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'john.doe@example.com',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 14,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                              const SizedBox(height: 20),
                               Container(
                                 padding: const EdgeInsets.all(16),
                                 decoration: BoxDecoration(
@@ -191,7 +130,8 @@ class ProfileScreen extends StatelessWidget {
                                                         context,
                                                       ).viewInsets.bottom,
                                                 ),
-                                                child: WaterGoalCalculator(),
+                                                child:
+                                                    const WaterGoalCalculator(),
                                               ),
                                         );
                                       },
@@ -253,38 +193,46 @@ class ProfileScreen extends StatelessWidget {
                             _buildInfoTile(
                               context,
                               'Weight',
-                              '70 kg',
+                              '${waterProvider.weight} kg',
                               Icons.monitor_weight,
-                              onTap: () {
-                                // Edit weight
-                              },
+                              onTap:
+                                  () => _showEditDialog(
+                                    context,
+                                    'Weight',
+                                    waterProvider,
+                                  ),
                             ),
                             const Divider(height: 1),
                             _buildInfoTile(
                               context,
                               'Height',
-                              '175 cm',
+                              '${waterProvider.height} cm',
                               Icons.height,
-                              onTap: () {
-                                // Edit height
-                              },
+                              onTap:
+                                  () => _showEditDialog(
+                                    context,
+                                    'Height',
+                                    waterProvider,
+                                  ),
                             ),
                             const Divider(height: 1),
                             _buildInfoTile(
                               context,
                               'Activity Level',
-                              'Moderate',
+                              waterProvider.activityLevel[0].toUpperCase() +
+                                  waterProvider.activityLevel.substring(1),
                               Icons.fitness_center,
-                              onTap: () {
-                                // Edit activity level
-                              },
+                              onTap:
+                                  () => _showActivityLevelDialog(
+                                    context,
+                                    waterProvider,
+                                  ),
                             ),
                           ],
                         ),
                       ),
                     ),
 
-                   
                     const SizedBox(height: 20),
                   ],
                 ),
@@ -427,6 +375,104 @@ class ProfileScreen extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  void _showEditDialog(
+    BuildContext context,
+    String field,
+    WaterProvider provider,
+  ) {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: Text('Edit $field'),
+            content: TextField(
+              controller: controller,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                labelText: field,
+                suffixText: field == 'Weight' ? 'kg' : 'cm',
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  final value = double.tryParse(controller.text);
+                  if (value != null && value > 0) {
+                    if (field == 'Weight') {
+                      provider.updateProfile(weight: value);
+                    } else {
+                      provider.updateProfile(height: value);
+                    }
+                    Navigator.pop(context);
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Please enter a valid value'),
+                      ),
+                    );
+                  }
+                },
+                child: const Text('Save'),
+              ),
+            ],
+          ),
+    );
+  }
+
+  void _showActivityLevelDialog(BuildContext context, WaterProvider provider) {
+    const levels = ['sedentary', 'moderate', 'active', 'very_active'];
+    String? selectedLevel;
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Edit Activity Level'),
+            content: StatefulBuilder(
+              builder:
+                  (context, setState) => Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children:
+                        levels
+                            .map(
+                              (level) => RadioListTile<String>(
+                                title: Text(
+                                  level[0].toUpperCase() + level.substring(1),
+                                ),
+                                value: level,
+                                groupValue:
+                                    selectedLevel ?? provider.activityLevel,
+                                onChanged:
+                                    (value) =>
+                                        setState(() => selectedLevel = value),
+                              ),
+                            )
+                            .toList(),
+                  ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  if (selectedLevel != null) {
+                    provider.updateProfile(activityLevel: selectedLevel);
+                    Navigator.pop(context);
+                  }
+                },
+                child: const Text('Save'),
+              ),
+            ],
+          ),
     );
   }
 }

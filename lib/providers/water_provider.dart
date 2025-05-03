@@ -9,6 +9,11 @@ class WaterProvider with ChangeNotifier {
   bool _remindersEnabled = false;
   String _unit = 'ml'; // 'ml' or 'oz'
 
+  // Profile info
+  double _weight = 70.0; // in kg
+  double _height = 175.0; // in cm
+  String _activityLevel = 'Moderate'; // Sedentary, Moderate, Active
+
   WaterProvider() {
     _loadData();
   }
@@ -19,7 +24,11 @@ class WaterProvider with ChangeNotifier {
   bool get remindersEnabled => _remindersEnabled;
   String get unit => _unit;
 
-  // Methods
+  double get weight => _weight;
+  double get height => _height;
+  String get activityLevel => _activityLevel;
+
+  // Drink Management
   void addDrink(Drink drink) {
     _drinks.add(drink);
     _saveData();
@@ -32,6 +41,7 @@ class WaterProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  // Settings
   void setDailyGoal(int goal) {
     _dailyGoal = goal;
     _saveData();
@@ -50,11 +60,23 @@ class WaterProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // Helper methods
+  // Profile update
+  void updateProfile({
+    double? weight,
+    double? height,
+    String? activityLevel,
+  }) async {
+    if (weight != null) _weight = weight;
+    if (height != null) _height = height;
+    if (activityLevel != null) _activityLevel = activityLevel;
+    await _saveData();
+    notifyListeners();
+  }
+
+  // Today tracking
   List<Drink> getTodayDrinks() {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-
     return _drinks.where((drink) {
       final drinkDate = DateTime(
         drink.timestamp.year,
@@ -66,29 +88,24 @@ class WaterProvider with ChangeNotifier {
   }
 
   int getTodayTotal() {
-    final todayDrinks = getTodayDrinks();
-    return todayDrinks.fold(0, (sum, drink) => sum + drink.amount);
+    return getTodayDrinks().fold(0, (sum, drink) => sum + drink.amount);
   }
 
   double getTodayProgress() {
     return getTodayTotal() / _dailyGoal;
   }
 
-  // Get weekly data for charts
+  // Weekly data
   List<Map<String, dynamic>> getWeeklyData() {
     final now = DateTime.now();
     final List<Map<String, dynamic>> weekData = [];
-
-    // Get the start of the week (Monday)
     final int currentWeekday = now.weekday;
     final startOfWeek = now.subtract(Duration(days: currentWeekday - 1));
 
-    // Create data for each day of the week
     for (int i = 0; i < 7; i++) {
       final day = startOfWeek.add(Duration(days: i));
       final dayDrinks = _getDrinksForDate(day);
       final amount = dayDrinks.fold(0, (sum, drink) => sum + drink.amount);
-
       weekData.add({
         'day': _getWeekdayName(day.weekday),
         'amount': amount,
@@ -99,30 +116,25 @@ class WaterProvider with ChangeNotifier {
     return weekData;
   }
 
-  // Get monthly data for charts
+  // Monthly data
   List<Map<String, dynamic>> getMonthlyData() {
     final now = DateTime.now();
     final List<Map<String, dynamic>> monthData = [];
-
-    // Get the number of days in the current month
     final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
 
-    // Create data for each day of the month
     for (int i = 1; i <= daysInMonth; i++) {
       final day = DateTime(now.year, now.month, i);
       final dayDrinks = _getDrinksForDate(day);
       final amount = dayDrinks.fold(0, (sum, drink) => sum + drink.amount);
-
       monthData.add({'day': i, 'amount': amount, 'goal': _dailyGoal});
     }
 
     return monthData;
   }
 
-  // Helper method to get drinks for a specific date
+  // Get drinks for specific day
   List<Drink> _getDrinksForDate(DateTime date) {
     final targetDate = DateTime(date.year, date.month, date.day);
-
     return _drinks.where((drink) {
       final drinkDate = DateTime(
         drink.timestamp.year,
@@ -133,7 +145,7 @@ class WaterProvider with ChangeNotifier {
     }).toList();
   }
 
-  // Helper method to get weekday name
+  // Day names
   String _getWeekdayName(int weekday) {
     switch (weekday) {
       case 1:
@@ -155,13 +167,17 @@ class WaterProvider with ChangeNotifier {
     }
   }
 
-  // Data persistence
+  // Load from storage
   Future<void> _loadData() async {
     final prefs = await SharedPreferences.getInstance();
 
     _dailyGoal = prefs.getInt('dailyGoal') ?? 2000;
     _remindersEnabled = prefs.getBool('remindersEnabled') ?? false;
     _unit = prefs.getString('unit') ?? 'ml';
+
+    _weight = prefs.getDouble('weight') ?? 70.0;
+    _height = prefs.getDouble('height') ?? 175.0;
+    _activityLevel = prefs.getString('activityLevel') ?? 'Moderate';
 
     final drinksJson = prefs.getStringList('drinks') ?? [];
     _drinks =
@@ -170,12 +186,17 @@ class WaterProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  // Save to storage
   Future<void> _saveData() async {
     final prefs = await SharedPreferences.getInstance();
 
     await prefs.setInt('dailyGoal', _dailyGoal);
     await prefs.setBool('remindersEnabled', _remindersEnabled);
     await prefs.setString('unit', _unit);
+
+    await prefs.setDouble('weight', _weight);
+    await prefs.setDouble('height', _height);
+    await prefs.setString('activityLevel', _activityLevel);
 
     final drinksJson =
         _drinks.map((drink) => jsonEncode(drink.toJson())).toList();
