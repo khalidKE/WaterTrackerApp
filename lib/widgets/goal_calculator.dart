@@ -11,7 +11,6 @@ class WaterGoalCalculator extends StatefulWidget {
   @override
   State<WaterGoalCalculator> createState() => _WaterGoalCalculatorState();
 }
-
 class _WaterGoalCalculatorState extends State<WaterGoalCalculator> {
   final TextEditingController _weightController = TextEditingController(
     text: '',
@@ -19,8 +18,10 @@ class _WaterGoalCalculatorState extends State<WaterGoalCalculator> {
   final TextEditingController _heightController = TextEditingController(
     text: '',
   );
+  final TextEditingController _ageController = TextEditingController(
+    text: '',
+  ); // New age controller
   final TextEditingController _manualGoalController = TextEditingController();
-
   String _gender = 'male';
   String _activityLevel = 'moderate';
   bool _isManualGoal = false;
@@ -36,6 +37,7 @@ class _WaterGoalCalculatorState extends State<WaterGoalCalculator> {
   void dispose() {
     _weightController.dispose();
     _heightController.dispose();
+    _ageController.dispose(); // Dispose age controller
     _manualGoalController.dispose();
     super.dispose();
   }
@@ -43,6 +45,7 @@ class _WaterGoalCalculatorState extends State<WaterGoalCalculator> {
   void _calculateGoal() {
     final weight = double.tryParse(_weightController.text) ?? 70.0;
     final height = double.tryParse(_heightController.text) ?? 170.0;
+    final age = int.tryParse(_ageController.text) ?? 30; // Parse age
     double factor = _gender == 'female' ? 28 : 30;
 
     switch (_activityLevel) {
@@ -58,6 +61,12 @@ class _WaterGoalCalculatorState extends State<WaterGoalCalculator> {
     }
 
     factor += (height - 170) * 0.05;
+    // Adjust factor based on age
+    if (age > 60) {
+      factor -= 2; // Slightly lower requirement for older adults
+    } else if (age < 18) {
+      factor += 2; // Slightly higher for younger individuals
+    }
 
     setState(() {
       _calculatedGoal = (weight * factor).round();
@@ -72,16 +81,17 @@ class _WaterGoalCalculatorState extends State<WaterGoalCalculator> {
         _isManualGoal
             ? int.tryParse(_manualGoalController.text) ?? _calculatedGoal
             : _calculatedGoal;
-
     final weight = double.tryParse(_weightController.text) ?? 70.0;
     final height = double.tryParse(_heightController.text) ?? 170.0;
+    final age = int.tryParse(_ageController.text) ?? 30; // Get age
     final activityLevel = _activityLevel;
 
-    // Update WaterProvider with new values
+    // Update WaterProvider with new values including age
     Provider.of<WaterProvider>(context, listen: false).updateProfile(
       weight: weight,
       height: height,
       activityLevel: activityLevel,
+      age: age,
     );
     Provider.of<WaterProvider>(context, listen: false).setDailyGoal(goal);
 
@@ -200,6 +210,13 @@ class _WaterGoalCalculatorState extends State<WaterGoalCalculator> {
                     icon: Icons.height,
                     onChanged: (_) => _calculateGoal(),
                   ),
+                  const SizedBox(height: 16),
+                  _buildNumberField(
+                    controller: _ageController, // New age field
+                    label: 'Age (years)',
+                    icon: Icons.cake,
+                    onChanged: (_) => _calculateGoal(),
+                  ),
                   const SizedBox(height: 20),
                   Row(
                     children: [
@@ -284,12 +301,15 @@ class _WaterGoalCalculatorState extends State<WaterGoalCalculator> {
     final heightValid =
         double.tryParse(_heightController.text) != null &&
         double.parse(_heightController.text) > 0;
+    final ageValid =
+        int.tryParse(_ageController.text) != null &&
+        int.parse(_ageController.text) > 0; // Validate age
     final manualValid =
         !_isManualGoal ||
         (int.tryParse(_manualGoalController.text) != null &&
             int.parse(_manualGoalController.text) > 0);
 
-    if (weightValid && heightValid && manualValid) {
+    if (weightValid && heightValid && ageValid && manualValid) {
       _saveForm();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(

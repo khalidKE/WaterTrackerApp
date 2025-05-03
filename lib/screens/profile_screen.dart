@@ -6,7 +6,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../providers/water_provider.dart';
 import '../widgets/goal_calculator.dart';
-
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
@@ -36,7 +35,6 @@ class ProfileScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Custom App Bar
                     Padding(
                       padding: const EdgeInsets.only(bottom: 20),
                       child: Row(
@@ -55,8 +53,6 @@ class ProfileScreen extends StatelessWidget {
                         ],
                       ),
                     ),
-
-                    // User profile card with glass effect
                     FadeInUp(
                       child: _buildGlassCard(
                         context,
@@ -150,10 +146,7 @@ class ProfileScreen extends StatelessWidget {
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 24),
-
-                    // Personal info section
                     FadeInUp(
                       delay: const Duration(milliseconds: 200),
                       child: Row(
@@ -181,9 +174,7 @@ class ProfileScreen extends StatelessWidget {
                         ],
                       ),
                     ),
-
                     const SizedBox(height: 12),
-
                     FadeInUp(
                       delay: const Duration(milliseconds: 300),
                       child: _buildGlassCard(
@@ -218,6 +209,19 @@ class ProfileScreen extends StatelessWidget {
                             const Divider(height: 1),
                             _buildInfoTile(
                               context,
+                              'Age',
+                              '${waterProvider.age} years', // New age tile
+                              Icons.cake,
+                              onTap:
+                                  () => _showEditDialog(
+                                    context,
+                                    'Age',
+                                    waterProvider,
+                                  ),
+                            ),
+                            const Divider(height: 1),
+                            _buildInfoTile(
+                              context,
                               'Activity Level',
                               waterProvider.activityLevel[0].toUpperCase() +
                                   waterProvider.activityLevel.substring(1),
@@ -232,7 +236,6 @@ class ProfileScreen extends StatelessWidget {
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 20),
                   ],
                 ),
@@ -306,78 +309,6 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildChallengeItem(
-    BuildContext context,
-    String title,
-    String description,
-    IconData icon,
-    Color color,
-    int progress,
-    int total,
-  ) {
-    final percentage = progress / total;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, color: color, size: 24),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: GoogleFonts.poppins(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16,
-                      ),
-                    ),
-                    Text(
-                      description,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Text(
-                '$progress/$total',
-                style: GoogleFonts.poppins(
-                  fontWeight: FontWeight.w600,
-                  color: color,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: LinearProgressIndicator(
-              value: percentage,
-              backgroundColor: color.withOpacity(0.1),
-              valueColor: AlwaysStoppedAnimation<Color>(color),
-              minHeight: 8,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   void _showEditDialog(
     BuildContext context,
     String field,
@@ -394,7 +325,14 @@ class ProfileScreen extends StatelessWidget {
               keyboardType: TextInputType.number,
               decoration: InputDecoration(
                 labelText: field,
-                suffixText: field == 'Weight' ? 'kg' : 'cm',
+                suffixText:
+                    field == 'Weight'
+                        ? 'kg'
+                        : field == 'Height'
+                        ? 'cm'
+                        : field == 'Age'
+                        ? 'years'
+                        : '',
               ),
             ),
             actions: [
@@ -404,20 +342,34 @@ class ProfileScreen extends StatelessWidget {
               ),
               TextButton(
                 onPressed: () {
-                  final value = double.tryParse(controller.text);
-                  if (value != null && value > 0) {
-                    if (field == 'Weight') {
-                      provider.updateProfile(weight: value);
+                  if (field == 'Age') {
+                    final value = int.tryParse(controller.text);
+                    if (value != null && value > 0) {
+                      provider.updateProfile(age: value);
+                      Navigator.pop(context);
                     } else {
-                      provider.updateProfile(height: value);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Please enter a valid age'),
+                        ),
+                      );
                     }
-                    Navigator.pop(context);
                   } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Please enter a valid value'),
-                      ),
-                    );
+                    final value = double.tryParse(controller.text);
+                    if (value != null && value > 0) {
+                      if (field == 'Weight') {
+                        provider.updateProfile(weight: value);
+                      } else {
+                        provider.updateProfile(height: value);
+                      }
+                      Navigator.pop(context);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Please enter a valid value'),
+                        ),
+                      );
+                    }
                   }
                 },
                 child: const Text('Save'),

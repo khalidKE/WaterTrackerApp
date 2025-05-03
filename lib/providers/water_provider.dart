@@ -7,17 +7,18 @@ class WaterProvider with ChangeNotifier {
   List<Drink> _drinks = [];
   int _dailyGoal = 2000; // Default goal in ml
   bool _remindersEnabled = false;
-  String _unit = 'ml'; // 'ml' or 'oz'
+  String _unit = 'ml'; 
 
   // Profile info
   double _weight = 70.0; // in kg
   double _height = 175.0; // in cm
   String _activityLevel = 'Moderate'; // Sedentary, Moderate, Active
+int _age = 30;
 
   WaterProvider() {
     _loadData();
   }
-
+int get age => _age;
   // Getters
   List<Drink> get drinks => _drinks;
   int get dailyGoal => _dailyGoal;
@@ -64,11 +65,13 @@ class WaterProvider with ChangeNotifier {
   void updateProfile({
     double? weight,
     double? height,
-    String? activityLevel,
+    String? activityLevel, 
+    int? age,
   }) async {
     if (weight != null) _weight = weight;
     if (height != null) _height = height;
     if (activityLevel != null) _activityLevel = activityLevel;
+    if (age != null) _age = age;
     await _saveData();
     notifyListeners();
   }
@@ -178,7 +181,7 @@ class WaterProvider with ChangeNotifier {
     _weight = prefs.getDouble('weight') ?? 70.0;
     _height = prefs.getDouble('height') ?? 175.0;
     _activityLevel = prefs.getString('activityLevel') ?? 'Moderate';
-
+_age = prefs.getInt('age') ?? 30;
     final drinksJson = prefs.getStringList('drinks') ?? [];
     _drinks =
         drinksJson.map((json) => Drink.fromJson(jsonDecode(json))).toList();
@@ -197,7 +200,7 @@ class WaterProvider with ChangeNotifier {
     await prefs.setDouble('weight', _weight);
     await prefs.setDouble('height', _height);
     await prefs.setString('activityLevel', _activityLevel);
-
+await prefs.setInt('age', _age);
     final drinksJson =
         _drinks.map((drink) => jsonEncode(drink.toJson())).toList();
     await prefs.setStringList('drinks', drinksJson);
