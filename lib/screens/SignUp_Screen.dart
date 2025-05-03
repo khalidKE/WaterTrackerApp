@@ -1,14 +1,11 @@
+import 'dart:ui';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:provider/provider.dart';
-import 'package:lottie/lottie.dart';
-import 'package:animate_do/animate_do.dart';
 import 'package:water_tracker/MainScreen.dart';
-import 'package:water_tracker/screens/Login_Screen.dart';
-
-import '../providers/theme_provider.dart';
+import 'login_screen.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -17,22 +14,46 @@ class SignupScreen extends StatefulWidget {
   _SignupScreenState createState() => _SignupScreenState();
 }
 
-class _SignupScreenState extends State<SignupScreen> {
+class _SignupScreenState extends State<SignupScreen>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   bool _isLoading = false;
   String? _errorMessage;
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
+  late AnimationController _backgroundAnimationController;
+
+  @override
+  void initState() {
+    super.initState();
+    _backgroundAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 20),
+    )..repeat();
+
+    // Apply subtle haptic feedback when screen loads
+    HapticFeedback.lightImpact();
+  }
 
   @override
   void dispose() {
+    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    _backgroundAnimationController.dispose();
     super.dispose();
   }
 
   Future<void> _signup() async {
     if (!_formKey.currentState!.validate()) return;
+
+    // Apply haptic feedback for interaction
+    HapticFeedback.mediumImpact();
 
     setState(() {
       _isLoading = true;
@@ -40,20 +61,48 @@ class _SignupScreenState extends State<SignupScreen> {
     });
 
     try {
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
+      // Simulating a delay for registration
+      await Future.delayed(const Duration(seconds: 2));
 
-      // 🚫 Prevent back navigation to signup
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const MainScreen()),
-        (route) => false,
-      );
-    } on FirebaseAuthException catch (e) {
+      // Replace with your actual registration logic
+      // For example:
+      // await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      //   email: _emailController.text.trim(),
+      //   password: _passwordController.text.trim(),
+      // );
+
+      // Create user profile with additional data
+      // final user = FirebaseAuth.instance.currentUser;
+      // await FirebaseFirestore.instance.collection('users').doc(user!.uid).set({
+      //   'name': _nameController.text.trim(),
+      //   'email': _emailController.text.trim(),
+      //   'gender': _selectedGender,
+      //   'weight': double.tryParse(_weightController.text) ?? 0.0,
+      //   'weightUnit': _weightUnit,
+      //   'createdAt': DateTime.now(),
+      // });
+
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          PageRouteBuilder(
+            pageBuilder:
+                (context, animation, secondaryAnimation) => const MainScreen(),
+            transitionsBuilder: (
+              context,
+              animation,
+              secondaryAnimation,
+              child,
+            ) {
+              return FadeTransition(opacity: animation, child: child);
+            },
+            transitionDuration: const Duration(milliseconds: 500),
+          ),
+        );
+      }
+    } catch (e) {
       setState(() {
-        _errorMessage = e.message;
+        _errorMessage = 'Failed to create account. Please try again.';
       });
     } finally {
       setState(() {
@@ -64,245 +113,499 @@ class _SignupScreenState extends State<SignupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final isDarkMode = themeProvider.isDarkMode;
-
     return Scaffold(
-      body: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors:
-                isDarkMode
-                    ? [Colors.blueGrey.shade900, Colors.blueGrey.shade700]
-                    : [Colors.blue.shade400, Colors.blue.shade200],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            child: FadeIn(
-              duration: const Duration(milliseconds: 800),
+      body: AnimatedBuilder(
+        animation: _backgroundAnimationController,
+        builder: (context, child) {
+          return Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Color(0xFF0288D1),
+                  Color(0xFF03A9F4),
+                  Color(0xFF4FC3F7),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: Stack(
+              children: [
+                // Animated water background
+                Positioned.fill(
+                  child: CustomPaint(
+                    painter: SignupBackgroundPainter(
+                      animation: _backgroundAnimationController.value,
+                    ),
+                    child: const SizedBox.expand(),
+                  ),
+                ),
+
+                child!,
+              ],
+            ),
+          );
+        },
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+                vertical: 20.0,
+              ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  SizedBox(
-                    width: MediaQuery.of(context).size.width * 0.4,
-                    height: MediaQuery.of(context).size.width * 0.4,
-                    child: LottieBuilder.asset(
-                      'images/splash.json',
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    'Water Tracker',
-                    style: GoogleFonts.poppins(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: isDarkMode ? Colors.white : Colors.black87,
-                      shadows: [
-                        Shadow(
-                          blurRadius: 4.0,
-                          color:
-                              isDarkMode
-                                  ? Colors.black45
-                                  : Colors.grey.shade400,
-                          offset: const Offset(2, 2),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    'Join Us Today!',
-                    style: GoogleFonts.poppins(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w400,
-                      color: isDarkMode ? Colors.white70 : Colors.black54,
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color:
-                          isDarkMode
-                              ? Colors.black.withOpacity(0.5)
-                              : Colors.white.withOpacity(0.8),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, 5),
-                        ),
-                      ],
-                    ),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
+                  // App logo with water droplet
+                  Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          TextFormField(
-                            controller: _emailController,
-                            decoration: InputDecoration(
-                              labelText: 'Email',
-                              labelStyle: GoogleFonts.poppins(
-                                color:
-                                    isDarkMode
-                                        ? Colors.white70
-                                        : Colors.black54,
-                              ),
-                              filled: true,
-                              fillColor:
-                                  isDarkMode
-                                      ? Colors.white.withOpacity(0.1)
-                                      : Colors.grey.shade200,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide.none,
-                              ),
-                              prefixIcon: Icon(
-                                Icons.email,
-                                color:
-                                    isDarkMode
-                                        ? Colors.white70
-                                        : Colors.blue.shade600,
-                              ),
+                          Text(
+                            "Hydromate",
+                            style: GoogleFonts.montserrat(
+                              fontSize: 30,
+                              fontWeight: FontWeight.w300,
+                              color: Colors.white,
+                              letterSpacing: 2,
+                              shadows: [
+                                Shadow(
+                                  color: Colors.black.withOpacity(0.2),
+                                  blurRadius: 4,
+                                  offset: const Offset(1, 1),
+                                ),
+                              ],
                             ),
-                            style: GoogleFonts.poppins(
-                              color: isDarkMode ? Colors.white : Colors.black,
-                            ),
-                            keyboardType: TextInputType.emailAddress,
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter your email';
-                              }
-                              if (!RegExp(
-                                r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                              ).hasMatch(value)) {
-                                return 'Please enter a valid email';
-                              }
-                              return null;
-                            },
                           ),
-                          const SizedBox(height: 16),
-                          TextFormField(
-                            controller: _passwordController,
-                            decoration: InputDecoration(
-                              labelText: 'Password',
-                              labelStyle: GoogleFonts.poppins(
-                                color:
-                                    isDarkMode
-                                        ? Colors.white70
-                                        : Colors.black54,
-                              ),
-                              filled: true,
-                              fillColor:
-                                  isDarkMode
-                                      ? Colors.white.withOpacity(0.1)
-                                      : Colors.grey.shade200,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide.none,
-                              ),
-                              prefixIcon: Icon(
-                                Icons.lock,
-                                color:
-                                    isDarkMode
-                                        ? Colors.white70
-                                        : Colors.blue.shade600,
-                              ),
-                            ),
-                            style: GoogleFonts.poppins(
-                              color: isDarkMode ? Colors.white : Colors.black,
-                            ),
-                            obscureText: true,
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter your password';
-                              }
-                              if (value.length < 6) {
-                                return 'Password must be at least 6 characters';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 20),
-                          if (_errorMessage != null)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 16),
-                              child: Text(
-                                _errorMessage!,
-                                style: GoogleFonts.poppins(
-                                  color: Colors.redAccent,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ),
-                          _isLoading
-                              ? CircularProgressIndicator(
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  isDarkMode
-                                      ? Colors.white70
-                                      : Colors.blue.shade600,
-                                ),
-                              )
-                              : ElevatedButton(
-                                onPressed: () {
-                                  HapticFeedback.lightImpact();
-                                  _signup();
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor:
-                                      isDarkMode
-                                          ? Colors.blueGrey.shade700
-                                          : Colors.blue.shade400,
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 40,
-                                    vertical: 16,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  elevation: 5,
-                                ),
-                                child: Text(
-                                  'Sign Up',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                          const SizedBox(height: 16),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const LoginScreen(),
-                                ),
-                              );
-                            },
-                            child: Text(
-                              'Already have an account? Login',
-                              style: GoogleFonts.poppins(
-                                color:
-                                    isDarkMode
-                                        ? Colors.white70
-                                        : Colors.blue.shade600,
-                                fontSize: 14,
-                              ),
-                            ),
+                        
+                          SizedBox(width: 5),
+                          Icon(
+                            Icons.water_drop_rounded,
+                            color: Colors.white,
+                            size: 26,
                           ),
                         ],
+                      )
+                      .animate()
+                      .fadeIn(duration: 800.ms, delay: 200.ms)
+                      .slideY(
+                        begin: -0.2,
+                        end: 0,
+                        duration: 800.ms,
+                        curve: Curves.easeOutQuint,
                       ),
+
+                  const SizedBox(height: 10),
+
+                  Text(
+                    "Create Your Account",
+                    style: GoogleFonts.poppins(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                      letterSpacing: 0.5,
                     ),
-                  ),
+                  ).animate().fadeIn(duration: 800.ms, delay: 400.ms),
+
+                  const SizedBox(height: 30),
+
+                  // Modern glassmorphism signup card
+                  Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 10,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.2),
+                            width: 1.5,
+                          ),
+                        ),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Email field
+                              TextFormField(
+                                controller: _emailController,
+                                decoration: InputDecoration(
+                                  labelText: 'Email',
+                                  labelStyle: GoogleFonts.poppins(
+                                    color: Colors.white.withOpacity(0.9),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  filled: true,
+                                  fillColor: Colors.white.withOpacity(0.15),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  prefixIcon: Icon(
+                                    Icons.email_rounded,
+                                    color: Colors.white.withOpacity(0.9),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(
+                                      color: Colors.white.withOpacity(0.3),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(
+                                      color: Colors.white,
+                                      width: 2,
+                                    ),
+                                  ),
+                                ),
+                                style: GoogleFonts.poppins(color: Colors.white),
+                                keyboardType: TextInputType.emailAddress,
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Please enter your email';
+                                  }
+                                  if (!RegExp(
+                                    r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                                  ).hasMatch(value)) {
+                                    return 'Please enter a valid email';
+                                  }
+                                  return null;
+                                },
+                              ),
+
+                              const SizedBox(height: 16),
+
+                              // Password field
+                              TextFormField(
+                                controller: _passwordController,
+                                decoration: InputDecoration(
+                                  labelText: 'Password',
+                                  labelStyle: GoogleFonts.poppins(
+                                    color: Colors.white.withOpacity(0.9),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  filled: true,
+                                  fillColor: Colors.white.withOpacity(0.15),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  prefixIcon: Icon(
+                                    Icons.lock_rounded,
+                                    color: Colors.white.withOpacity(0.9),
+                                  ),
+                                  suffixIcon: IconButton(
+                                    icon: Icon(
+                                      _obscurePassword
+                                          ? Icons.visibility_rounded
+                                          : Icons.visibility_off_rounded,
+                                      color: Colors.white.withOpacity(0.9),
+                                    ),
+                                    onPressed: () {
+                                      setState(() {
+                                        _obscurePassword = !_obscurePassword;
+                                      });
+                                      HapticFeedback.lightImpact();
+                                    },
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(
+                                      color: Colors.white.withOpacity(0.3),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(
+                                      color: Colors.white,
+                                      width: 2,
+                                    ),
+                                  ),
+                                ),
+                                style: GoogleFonts.poppins(color: Colors.white),
+                                obscureText: _obscurePassword,
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Please enter a password';
+                                  }
+                                  if (value.length < 6) {
+                                    return 'Password must be at least 6 characters';
+                                  }
+                                  return null;
+                                },
+                              ),
+
+                              const SizedBox(height: 16),
+
+                              // Confirm password field
+                              TextFormField(
+                                controller: _confirmPasswordController,
+                                decoration: InputDecoration(
+                                  labelText: 'Confirm Password',
+                                  labelStyle: GoogleFonts.poppins(
+                                    color: Colors.white.withOpacity(0.9),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  filled: true,
+                                  fillColor: Colors.white.withOpacity(0.15),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  prefixIcon: Icon(
+                                    Icons.lock_rounded,
+                                    color: Colors.white.withOpacity(0.9),
+                                  ),
+                                  suffixIcon: IconButton(
+                                    icon: Icon(
+                                      _obscureConfirmPassword
+                                          ? Icons.visibility_rounded
+                                          : Icons.visibility_off_rounded,
+                                      color: Colors.white.withOpacity(0.9),
+                                    ),
+                                    onPressed: () {
+                                      setState(() {
+                                        _obscureConfirmPassword =
+                                            !_obscureConfirmPassword;
+                                      });
+                                      HapticFeedback.lightImpact();
+                                    },
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(
+                                      color: Colors.white.withOpacity(0.3),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(
+                                      color: Colors.white,
+                                      width: 2,
+                                    ),
+                                  ),
+                                ),
+                                style: GoogleFonts.poppins(color: Colors.white),
+                                obscureText: _obscureConfirmPassword,
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Please confirm your password';
+                                  }
+                                  if (value != _passwordController.text) {
+                                    return 'Passwords do not match';
+                                  }
+                                  return null;
+                                },
+                              ),
+
+                              const SizedBox(height: 20),
+
+                              const SizedBox(height: 24),
+
+                              // Error message display
+                              if (_errorMessage != null)
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.redAccent.withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: Colors.redAccent.withOpacity(0.5),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.error_outline_rounded,
+                                        color: Colors.white,
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          _errorMessage!,
+                                          style: GoogleFonts.poppins(
+                                            color: Colors.white,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+
+                              if (_errorMessage != null)
+                                const SizedBox(height: 20),
+
+                              // Sign up button with animated effects
+                              SizedBox(
+                                    width: double.infinity,
+                                    height: 55,
+                                    child: ElevatedButton(
+                                      onPressed: _isLoading ? null : _signup,
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: const Color(
+                                          0xFF0277BD,
+                                        ),
+                                        foregroundColor: Colors.white,
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 16,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
+                                        elevation: 5,
+                                        shadowColor: const Color(
+                                          0xFF0277BD,
+                                        ).withOpacity(0.5),
+                                      ),
+                                      child:
+                                          _isLoading
+                                              ? Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  SizedBox(
+                                                    width: 20,
+                                                    height: 20,
+                                                    child: CircularProgressIndicator(
+                                                      strokeWidth: 2,
+                                                      valueColor:
+                                                          AlwaysStoppedAnimation<
+                                                            Color
+                                                          >(Colors.white),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 12),
+                                                  Text(
+                                                    "CREATING ACCOUNT",
+                                                    style:
+                                                        GoogleFonts.montserrat(
+                                                          fontSize: 16,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                          letterSpacing: 1,
+                                                        ),
+                                                  ),
+                                                ],
+                                              )
+                                              : Text(
+                                                'SIGN UP',
+                                                style: GoogleFonts.montserrat(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w600,
+                                                  letterSpacing: 1,
+                                                ),
+                                              ),
+                                    ),
+                                  )
+                                  .animate()
+                                  .fadeIn(duration: 600.ms, delay: 600.ms)
+                                  .slideY(
+                                    begin: 0.2,
+                                    end: 0,
+                                    duration: 600.ms,
+                                    curve: Curves.easeOut,
+                                    delay: 600.ms,
+                                  ),
+
+                              const SizedBox(height: 20),
+
+                              // Login option
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    "Already have an account? ",
+                                    style: GoogleFonts.poppins(
+                                      color: Colors.white.withOpacity(0.9),
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      HapticFeedback.lightImpact();
+                                      Navigator.pushReplacement(
+                                        context,
+                                        PageRouteBuilder(
+                                          pageBuilder:
+                                              (
+                                                context,
+                                                animation,
+                                                secondaryAnimation,
+                                              ) => const LoginScreen(),
+                                          transitionsBuilder: (
+                                            context,
+                                            animation,
+                                            secondaryAnimation,
+                                            child,
+                                          ) {
+                                            const begin = Offset(-1.0, 0.0);
+                                            const end = Offset.zero;
+                                            const curve = Curves.easeOutCubic;
+
+                                            var tween = Tween(
+                                              begin: begin,
+                                              end: end,
+                                            ).chain(CurveTween(curve: curve));
+                                            var offsetAnimation = animation
+                                                .drive(tween);
+
+                                            return SlideTransition(
+                                              position: offsetAnimation,
+                                              child: child,
+                                            );
+                                          },
+                                          transitionDuration: const Duration(
+                                            milliseconds: 500,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: Colors.white,
+                                      padding: EdgeInsets.zero,
+                                      tapTargetSize:
+                                          MaterialTapTargetSize.shrinkWrap,
+                                    ),
+                                    child: Text(
+                                      'Log In',
+                                      style: GoogleFonts.poppins(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ).animate().fadeIn(
+                                duration: 600.ms,
+                                delay: 800.ms,
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                      .animate()
+                      .fadeIn(duration: 800.ms, delay: 200.ms)
+                      .slideY(
+                        begin: 0.3,
+                        end: 0,
+                        duration: 800.ms,
+                        curve: Curves.easeOutQuint,
+                      ),
                 ],
               ),
             ),
@@ -311,4 +614,79 @@ class _SignupScreenState extends State<SignupScreen> {
       ),
     );
   }
+}
+
+// Signup background with animated water waves
+class SignupBackgroundPainter extends CustomPainter {
+  final double animation;
+
+  SignupBackgroundPainter({required this.animation});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // Draw multiple wave layers for depth effect
+    _drawWave(
+      canvas,
+      size,
+      Color(0xFFB3E5FC).withOpacity(0.2),
+      animation,
+      0.85,
+      20,
+    );
+
+    _drawWave(
+      canvas,
+      size,
+      Color(0xFF81D4FA).withOpacity(0.2),
+      animation + 0.3,
+      0.8,
+      15,
+    );
+
+    _drawWave(
+      canvas,
+      size,
+      Color(0xFF4FC3F7).withOpacity(0.1),
+      animation + 0.6,
+      0.75,
+      10,
+    );
+  }
+
+  void _drawWave(
+    Canvas canvas,
+    Size size,
+    Color color,
+    double animation,
+    double heightFactor,
+    double amplitude,
+  ) {
+    final paint =
+        Paint()
+          ..color = color
+          ..style = PaintingStyle.fill;
+
+    final path = Path();
+    final height = size.height;
+    final width = size.width;
+
+    path.moveTo(0, height * heightFactor);
+
+    for (int i = 0; i < width; i += 5) {
+      path.lineTo(
+        i.toDouble(),
+        height * heightFactor +
+            sin((i * 0.01) + animation * 2 * pi) * amplitude,
+      );
+    }
+
+    path.lineTo(width, height);
+    path.lineTo(0, height);
+    path.close();
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(SignupBackgroundPainter oldDelegate) => true;
 }

@@ -1,48 +1,11 @@
+import 'dart:math';
+import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:lottie/lottie.dart';
-import 'package:water_tracker/screens/Login_Screen.dart';
-
-
-
-class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
-
-  @override
-  State<SplashScreen> createState() => _SplashScreenState();
-}
-
-class _SplashScreenState extends State<SplashScreen> {
-  @override
-  void initState() {
-    super.initState();
-    // Navigate to OnBoardingScreen after 2 seconds
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const OnBoardingScreen()),
-        );
-      }
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF0288D1), // Water-themed blue
-      body: Center(
-        child: Lottie.asset(
-          'images/splash.json', // Lottie JSON saved as an asset
-          width: 200.w,
-          height: 200.h,
-          fit: BoxFit.contain,
-        )
-      ),
-    );
-  }
-}
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'login_screen.dart';
 
 class OnBoardingScreen extends StatefulWidget {
   const OnBoardingScreen({super.key});
@@ -56,45 +19,58 @@ class _OnBoardingScreenState extends State<OnBoardingScreen>
   final PageController _controller = PageController();
   bool _isNavigating = false;
   int _currentPage = 0;
+  Offset _touchOffset = Offset.zero;
 
-  // Water-themed colors
-  final Color _primaryColor = const Color(0xFF0288D1); // Vibrant blue
-  final Color _secondaryColor = const Color(0xFFBBDEFB); // Light blue
-  final Color _accentColor = const Color(0xFF4FC3F7); // Bright blue
+  // Updated water-themed colors for Hydromate
+  final Color _primaryColor = const Color(0xFF2196F3); // Vibrant water blue
+  final Color _secondaryColor = const Color(0xFFE3F2FD); // Soft blue background
+  final Color _accentColor = const Color.fromARGB(255, 3, 27, 39); // Light blue accent
   final Color _lightColor = const Color(0xFFFFFFFF); // White
+  final Color _darkAccentColor = const Color(0xFF1565C0); // Deep blue
 
   // Animation controllers
   late AnimationController _backgroundAnimationController;
   late AnimationController _buttonAnimationController;
+  late AnimationController _waterAnimationController;
+  late AnimationController _arcAnimationController;
 
-  // Define water tracker-themed onboarding data
+  // Enhanced onboarding data with Hydromate branding
   final List<Map<String, dynamic>> _onboardingData = [
     {
-      'imagePath': 'images/icon.png',
-      'title': 'STAY HYDRATED',
-      'subtitle': 'Daily Water Goals',
+      'animationPath': 'images/goals.png', // Update to actual .png file path
+      'title': 'SET YOUR GOALS',
+      'subtitle': 'Tailored Hydration',
       'description':
-          'Set personalized daily water intake goals to keep your body hydrated and healthy.',
-      'iconData': Icons.local_drink,
-      'bgColor': const Color(0xFF0288D1),
-    },
-    {
-      'imagePath': 'images/icon.png',
-      'title': 'TRACK YOUR INTAKE',
-      'subtitle': 'Smart Monitoring',
-      'description':
-          'Log your water consumption and get reminders to drink water throughout the day.',
+          'Customize your daily water intake based on your lifestyle, body, and environment for optimal hydration.',
       'iconData': Icons.water_drop,
-      'bgColor': const Color(0xFF4FC3F7),
+      'bgColor': const Color(0xFF2196F3),
     },
     {
-      'imagePath': 'images/icon.png',
-      'title': 'BOOST YOUR HEALTH',
-      'subtitle': 'Wellness Insights',
+      'animationPath': 'images/alerts.png', // Update to actual .png file path
+      'title': 'SMART ALERTS',
+      'subtitle': 'Stay on Track',
       'description':
-          'Discover the benefits of hydration with insights and tips to improve your well-being.',
-      'iconData': Icons.health_and_safety,
-      'bgColor': const Color(0xFF81D4FA),
+          'Get personalized reminders that adapt to your schedule and drinking habits to keep you hydrated.',
+      'iconData': Icons.notifications_active,
+      'bgColor': const Color(0xFF42A5F5),
+    },
+    {
+      'animationPath': 'images/tracking.gif', // Update to actual .png file path
+      'title': 'INSIGHTFUL TRACKING',
+      'subtitle': 'Visualize Progress',
+      'description':
+          'Monitor your hydration journey with intuitive charts and detailed analytics to stay motivated.',
+      'iconData': Icons.bar_chart,
+      'bgColor': const Color(0xFF64B5F6),
+    },
+    {
+      'animationPath': 'images/wellness.png', // Update to actual .png file path
+      'title': 'ENHANCE WELLNESS',
+      'subtitle': 'Feel Your Best',
+      'description':
+          'Learn how proper hydration boosts energy, improves focus, and enhances your overall health.',
+      'iconData': Icons.favorite,
+      'bgColor': const Color(0xFF90CAF9),
     },
   ];
 
@@ -105,38 +81,52 @@ class _OnBoardingScreenState extends State<OnBoardingScreen>
       setState(() {
         _currentPage = _controller.page?.round() ?? 0;
       });
-
-      // Animate background when page changes
-      if (_controller.page?.round() != _currentPage) {
-        _backgroundAnimationController.forward(from: 0.0);
-      }
+      _backgroundAnimationController.forward(from: 0.0);
+      _arcAnimationController.forward(from: 0.0);
     });
 
     // Initialize animation controllers
     _backgroundAnimationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 600),
+      duration: const Duration(milliseconds: 500),
     );
 
     _buttonAnimationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 200),
+      duration: const Duration(milliseconds: 150),
     );
+
+    _waterAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 4),
+    )..repeat();
+
+    _arcAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..forward();
+
+    HapticFeedback.lightImpact();
   }
 
   @override
   void dispose() {
-    _controller.removeListener(() {});
     _controller.dispose();
     _backgroundAnimationController.dispose();
     _buttonAnimationController.dispose();
+    _waterAnimationController.dispose();
+    _arcAnimationController.dispose();
     super.dispose();
   }
 
   void _navigateToLogin() async {
     if (_isNavigating) return;
+
     setState(() => _isNavigating = true);
-    await Future.delayed(const Duration(milliseconds: 500));
+    HapticFeedback.mediumImpact();
+
+    await Future.delayed(const Duration(milliseconds: 200));
+
     if (mounted) {
       Navigator.pushReplacement(
         context,
@@ -144,477 +134,472 @@ class _OnBoardingScreenState extends State<OnBoardingScreen>
           pageBuilder:
               (context, animation, secondaryAnimation) => const LoginScreen(),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            const begin = Offset(0.0, 1.0);
+            const begin = Offset(1.0, 0.0);
             const end = Offset.zero;
-            const curve = Curves.easeOutQuint;
-
+            const curve = Curves.easeOutCubic;
             var tween = Tween(
               begin: begin,
               end: end,
             ).chain(CurveTween(curve: curve));
             var offsetAnimation = animation.drive(tween);
-            var fadeAnimation = Tween<double>(
-              begin: 0.0,
+            var scaleAnimation = Tween<double>(
+              begin: 0.95,
               end: 1.0,
             ).animate(CurvedAnimation(parent: animation, curve: curve));
-
             return SlideTransition(
               position: offsetAnimation,
-              child: FadeTransition(opacity: fadeAnimation, child: child),
+              child: ScaleTransition(scale: scaleAnimation, child: child),
             );
           },
+          transitionDuration: const Duration(milliseconds: 700),
         ),
       );
     }
   }
 
-  // Get adaptive sizes based on screen size
-  double _getAdaptiveSize(BuildContext context, double size) {
-    final screenHeight = MediaQuery.of(context).size.height;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final smallerDimension =
-        screenHeight < screenWidth ? screenHeight : screenWidth;
-
-    // Scale factor based on screen size
-    double scaleFactor = smallerDimension / 400; // Base size
-    return size * scaleFactor;
-  }
-
   @override
   Widget build(BuildContext context) {
-    // Get screen dimensions for responsive design
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenHeight < 700;
-
-    // Responsive padding
-    final horizontalPadding = screenWidth * 0.06;
-    final verticalPadding = screenHeight * 0.03;
+    final horizontalPadding = screenWidth * 0.08;
+    final verticalPadding = screenHeight * 0.04;
 
     return ScreenUtilInit(
       designSize: const Size(360, 690),
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) {
-        return Scaffold(
-          body: AnimatedBuilder(
-            animation: _backgroundAnimationController,
-            builder: (context, child) {
-              // Animated background color
-              final currentColor =
-                  _onboardingData[_currentPage]['bgColor'] as Color;
-
-              return Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Color.lerp(
-                            _secondaryColor,
-                            currentColor.withAlpha((0.8 * 255).toInt()),
-                            _backgroundAnimationController.value,
-                          ) ??
-                          _secondaryColor,
-                      _secondaryColor,
-                    ],
-                    begin: Alignment.topRight,
-                    end: Alignment.bottomLeft,
-                  ),
-                ),
-                child: SafeArea(
-                  child: Stack(
-                    children: [
-                      // Animated background elements
-                      AnimatedPositioned(
-                        duration: const Duration(milliseconds: 500),
-                        curve: Curves.easeOutQuint,
-                        top: -50.h + (_currentPage * 20),
-                        right: -50.w + (_currentPage * 10),
-                        child: Container(
-                              width: _getAdaptiveSize(context, 200),
-                              height: _getAdaptiveSize(context, 200),
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: _onboardingData[_currentPage]['bgColor']
-                                    .withOpacity(0.15),
-                              ),
-                            )
-                            .animate(
-                              onPlay:
-                                  (controller) =>
-                                      controller.repeat(reverse: true),
-                            )
-                            .scale(
-                              duration: 1200.ms,
-                              curve: Curves.easeOutQuint,
-                              begin: const Offset(0.8, 0.8),
-                              end: const Offset(1.0, 1.0),
-                            ),
-                      ),
-
-                      AnimatedPositioned(
-                        duration: const Duration(milliseconds: 500),
-                        curve: Curves.easeOutQuint,
-                        bottom: -80.h + (_currentPage * 15),
-                        left: -80.w + (_currentPage * 15),
-                        child: Container(
-                              width: _getAdaptiveSize(context, 250),
-                              height: _getAdaptiveSize(context, 250),
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: _accentColor.withOpacity(0.08),
-                              ),
-                            )
-                            .animate(
-                              onPlay:
-                                  (controller) =>
-                                      controller.repeat(reverse: true),
-                            )
-                            .scale(
-                              duration: 1500.ms,
-                              curve: Curves.easeOutQuint,
-                              begin: const Offset(0.9, 0.9),
-                              end: const Offset(1.1, 1.1),
-                            ),
-                      ),
-
-                      // App logo with parallax effect
-                      Positioned(
-                        top: 20.h,
-                        left: 0,
-                        right: 0,
-                        child: Transform.translate(
-                          offset: Offset(
-                            (_controller.hasClients
-                                    ? _controller.page ?? 0
-                                    : 0) *
-                                -20.0,
-                            0.0,
-                          ),
-                          child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    "AQUA",
-                                    style: TextStyle(
-                                      fontSize: isSmallScreen ? 24.sp : 28.sp,
-                                      fontWeight: FontWeight.w900,
-                                      color: _lightColor,
-                                      letterSpacing: 1.2,
-                                      fontFamily: 'Montserrat',
-                                    ),
-                                  ),
-                                  Text(
-                                    "TRACK",
-                                    style: TextStyle(
-                                      fontSize: isSmallScreen ? 24.sp : 28.sp,
-                                      fontWeight: FontWeight.w900,
-                                      color:
-                                          _onboardingData[_currentPage]['bgColor'],
-                                      letterSpacing: 1.2,
-                                      fontFamily: 'Montserrat',
-                                    ),
-                                  ),
-                                ],
-                              )
-                              .animate()
-                              .fadeIn(duration: 800.ms, delay: 200.ms)
-                              .slideY(
-                                begin: -0.2,
-                                end: 0,
-                                duration: 800.ms,
-                                curve: Curves.easeOutQuint,
-                              ),
+        return GestureDetector(
+          onPanUpdate: (details) {
+            setState(() {
+              _touchOffset = Offset(
+                _touchOffset.dx + details.delta.dx * 0.1,
+                _touchOffset.dy + details.delta.dy * 0.1,
+              );
+            });
+          },
+          child: Scaffold(
+            body: AnimatedBuilder(
+              animation: _backgroundAnimationController,
+              builder: (context, child) {
+                final currentColor =
+                    _onboardingData[_currentPage]['bgColor'] as Color;
+                return Stack(
+                  children: [
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 600),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            currentColor.withOpacity(0.9),
+                            Color.lerp(currentColor, _secondaryColor, 0.8) ??
+                                _secondaryColor,
+                          ],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
                         ),
                       ),
-
-                      // Main content
-                      Column(
-                        children: [
-                          SizedBox(
-                            height: _getAdaptiveSize(context, 70),
-                          ), // Space for the logo
-                          Expanded(
-                            child: PageView.builder(
-                              controller: _controller,
-                              itemCount: _onboardingData.length,
-                              itemBuilder: (context, index) {
-                                return _buildResponsivePage(
-                                  context,
-                                  imagePath:
-                                      _onboardingData[index]['imagePath'],
-                                  title: _onboardingData[index]['title'],
-                                  subtitle: _onboardingData[index]['subtitle'],
-                                  description:
-                                      _onboardingData[index]['description'],
-                                  iconData: _onboardingData[index]['iconData'],
-                                  color: _onboardingData[index]['bgColor'],
-                                  isActive: _currentPage == index,
-                                );
-                              },
+                      child: AnimatedBuilder(
+                        animation: _waterAnimationController,
+                        builder: (context, child) {
+                          return CustomPaint(
+                            painter: WaterBackgroundPainter(
+                              animation: _waterAnimationController.value,
+                              baseColor: currentColor,
                             ),
-                          ),
-
-                          // Bottom navigation with page indicator and buttons
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: horizontalPadding,
-                              vertical: verticalPadding,
-                            ),
-                            child: Column(
-                              children: [
-                                // Custom animated page indicator
-                                SizedBox(
-                                  height: 8.h,
+                            child: child,
+                          );
+                        },
+                        child: SafeArea(
+                          child: Stack(
+                            children: [
+                              BubbleAnimation(
+                                color: currentColor.withOpacity(0.25),
+                              ),
+                              Positioned(
+                                top: 25.h,
+                                left: 0,
+                                right: 0,
+                                child: Transform.translate(
+                                  offset: Offset(_touchOffset.dx * 0.5, 0),
                                   child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: List.generate(
-                                      _onboardingData.length,
-                                      (index) => AnimatedContainer(
-                                        duration: const Duration(
-                                          milliseconds: 300,
-                                        ),
-                                        margin: EdgeInsets.symmetric(
-                                          horizontal: 4.w,
-                                        ),
-                                        height: 8.h,
-                                        width:
-                                            _currentPage == index ? 24.w : 8.w,
-                                        decoration: BoxDecoration(
-                                          color:
-                                              _currentPage == index
-                                                  ? _onboardingData[_currentPage]['bgColor']
-                                                  : _lightColor.withOpacity(
-                                                    0.3,
-                                                  ),
-                                          borderRadius: BorderRadius.circular(
-                                            4.r,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            "HYDROMATE",
+                                            style: GoogleFonts.poppins(
+                                              fontSize:
+                                                  isSmallScreen ? 26.sp : 30.sp,
+                                              fontWeight: FontWeight.w700,
+                                              color: _lightColor,
+                                              letterSpacing: 2.0,
+                                              shadows: [
+                                                Shadow(
+                                                  color: _darkAccentColor
+                                                      .withOpacity(0.3),
+                                                  blurRadius: 8,
+                                                  offset: const Offset(0, 2),
+                                                ),
+                                              ],
+                                            ),
                                           ),
-                                        ),
+                                          SizedBox(width: 8.w),
+                                          Icon(
+                                            Icons.water_drop_rounded,
+                                            color: _accentColor,
+                                            size: isSmallScreen ? 26.sp : 30.sp,
+                                          ).animate().scale(
+                                            duration: 1200.ms,
+                                            curve: Curves.easeInOut,
+                                          ),
+                                        ],
+                                      )
+                                      .animate()
+                                      .fadeIn(duration: 900.ms)
+                                      .slideY(
+                                        begin: -0.3,
+                                        end: 0,
+                                        duration: 900.ms,
+                                        curve: Curves.easeOutQuint,
                                       ),
+                                ),
+                              ),
+                              Column(
+                                children: [
+                                  SizedBox(height: screenHeight * 0.15),
+                                  Expanded(
+                                    child: PageView.builder(
+                                      controller: _controller,
+                                      itemCount: _onboardingData.length,
+                                      itemBuilder: (context, index) {
+                                        return _buildResponsivePage(
+                                          context,
+                                          animationPath:
+                                              _onboardingData[index]['animationPath'],
+                                          title:
+                                              _onboardingData[index]['title'],
+                                          subtitle:
+                                              _onboardingData[index]['subtitle'],
+                                          description:
+                                              _onboardingData[index]['description'],
+                                          iconData:
+                                              _onboardingData[index]['iconData'],
+                                          color:
+                                              _onboardingData[index]['bgColor'],
+                                          isActive: _currentPage == index,
+                                        );
+                                      },
                                     ),
                                   ),
-                                ).animate().scale(
-                                  duration: 600.ms,
-                                  curve: Curves.easeInOut,
-                                ),
-
-                                SizedBox(height: isSmallScreen ? 20.h : 30.h),
-
-                                // Navigation buttons
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    // Skip button with ripple effect
-                                    TextButton(
-                                          onPressed:
-                                              _isNavigating
-                                                  ? null
-                                                  : _navigateToLogin,
-                                          style: TextButton.styleFrom(
-                                            foregroundColor: _lightColor
-                                                .withAlpha((0.8 * 255).toInt()),
-                                            padding: EdgeInsets.symmetric(
-                                              horizontal: 16.w,
-                                              vertical: 12.h,
-                                            ),
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(8.r),
-                                            ),
-                                          ),
-                                          child: Text(
-                                            "SKIP",
-                                            style: TextStyle(
-                                              fontSize:
-                                                  isSmallScreen ? 14.sp : 16.sp,
-                                              letterSpacing: 1.2,
-                                              fontFamily: 'Montserrat',
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                        )
-                                        .animate()
-                                        .fadeIn(duration: 800.ms, delay: 200.ms)
-                                        .shimmer(
-                                          duration: 1800.ms,
-                                          delay: 1200.ms,
-                                          color: _lightColor.withOpacity(0.2),
-                                        ),
-
-                                    // Next/Get Started button with pulse animation
-                                    GestureDetector(
-                                          onTap:
-                                              _isNavigating
-                                                  ? null
-                                                  : () {
-                                                    _buttonAnimationController
-                                                        .forward(from: 0.0);
-                                                    if (_currentPage ==
-                                                        _onboardingData.length -
-                                                            1) {
-                                                      _navigateToLogin();
-                                                    } else {
-                                                      _controller.nextPage(
-                                                        duration:
-                                                            const Duration(
-                                                              milliseconds: 500,
-                                                            ),
-                                                        curve:
-                                                            Curves.easeOutQuint,
-                                                      );
-                                                    }
-                                                  },
-                                          child: AnimatedBuilder(
-                                            animation:
-                                                _buttonAnimationController,
-                                            builder: (context, child) {
-                                              return Transform.scale(
-                                                scale:
-                                                    1.0 -
-                                                    (_buttonAnimationController
-                                                            .value *
-                                                        0.05),
-                                                child: AnimatedContainer(
-                                                  duration: const Duration(
-                                                    milliseconds: 300,
-                                                  ),
-                                                  decoration: BoxDecoration(
-                                                    color:
-                                                        _onboardingData[_currentPage]['bgColor'],
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          30.r,
-                                                        ),
-                                                    boxShadow: [
-                                                      BoxShadow(
-                                                        color:
-                                                            _onboardingData[_currentPage]['bgColor']
-                                                                .withOpacity(
-                                                                  0.4,
-                                                                ),
-                                                        blurRadius: 12,
-                                                        offset: const Offset(
-                                                          0,
-                                                          6,
-                                                        ),
-                                                      ),
+                                  Container(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: horizontalPadding,
+                                      vertical: verticalPadding,
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        SizedBox(
+                                          height: 10.h,
+                                          child: Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: List.generate(
+                                              _onboardingData.length,
+                                              (index) => AnimatedContainer(
+                                                duration: const Duration(
+                                                  milliseconds: 250,
+                                                ),
+                                                margin: EdgeInsets.symmetric(
+                                                  horizontal: 5.w,
+                                                ),
+                                                height: 10.h,
+                                                width:
+                                                    _currentPage == index
+                                                        ? 30.w
+                                                        : 10.w,
+                                                decoration: BoxDecoration(
+                                                  gradient: LinearGradient(
+                                                    colors: [
+                                                      _onboardingData[_currentPage]['bgColor'],
+                                                      _accentColor,
                                                     ],
                                                   ),
-                                                  padding: EdgeInsets.symmetric(
-                                                    horizontal:
-                                                        _currentPage ==
-                                                                _onboardingData
-                                                                        .length -
-                                                                    1
-                                                            ? 32.w
-                                                            : 24.w,
-                                                    vertical:
-                                                        isSmallScreen
-                                                            ? 12.h
-                                                            : 16.h,
-                                                  ),
-                                                  child:
-                                                      _isNavigating
-                                                          ? SizedBox(
-                                                            width: 20.w,
-                                                            height: 20.h,
-                                                            child: CircularProgressIndicator(
-                                                              strokeWidth: 2,
-                                                              valueColor:
-                                                                  AlwaysStoppedAnimation<
-                                                                    Color
-                                                                  >(
-                                                                    _lightColor,
-                                                                  ),
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                        5.r,
+                                                      ),
+                                                  boxShadow: [
+                                                    BoxShadow(
+                                                      color:
+                                                          _onboardingData[_currentPage]['bgColor']
+                                                              .withOpacity(0.4),
+                                                      blurRadius: 8,
+                                                      offset: const Offset(
+                                                        0,
+                                                        3,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          ).animate().scale(
+                                            duration: 500.ms,
+                                            curve: Curves.easeInOut,
+                                          ),
+                                        ),
+                                        SizedBox(
+                                          height: isSmallScreen ? 25.h : 35.h,
+                                        ),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            GestureDetector(
+                                              onTap:
+                                                  _isNavigating
+                                                      ? null
+                                                      : () {
+                                                        HapticFeedback.lightImpact();
+                                                        _buttonAnimationController
+                                                            .forward(from: 0.0);
+                                                        _navigateToLogin();
+                                                      },
+                                              child: AnimatedBuilder(
+                                                animation:
+                                                    _buttonAnimationController,
+                                                builder: (context, child) {
+                                                  return Transform.scale(
+                                                    scale:
+                                                        1.0 -
+                                                        (_buttonAnimationController
+                                                                .value *
+                                                            0.1),
+                                                    child: Container(
+                                                      padding:
+                                                          EdgeInsets.symmetric(
+                                                            horizontal: 20.w,
+                                                            vertical: 12.h,
+                                                          ),
+                                                      decoration: BoxDecoration(
+                                                        color: _lightColor
+                                                            .withOpacity(0.2),
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              12.r,
                                                             ),
-                                                          )
-                                                          : Row(
-                                                            mainAxisSize:
-                                                                MainAxisSize
-                                                                    .min,
-                                                            children: [
-                                                              Text(
-                                                                _currentPage ==
-                                                                        _onboardingData.length -
-                                                                            1
-                                                                    ? "GET STARTED"
-                                                                    : "NEXT",
-                                                                style: TextStyle(
-                                                                  fontSize:
-                                                                      isSmallScreen
-                                                                          ? 13.sp
-                                                                          : 15.sp,
-                                                                  color:
-                                                                      _lightColor,
-                                                                  fontFamily:
-                                                                      'Montserrat',
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .w700,
-                                                                  letterSpacing:
-                                                                      1.2,
+                                                        border: Border.all(
+                                                          color: _lightColor
+                                                              .withOpacity(0.3),
+                                                        ),
+                                                      ),
+                                                      child: Text(
+                                                        "SKIP",
+                                                        style:
+                                                            GoogleFonts.poppins(
+                                                              fontSize:
+                                                                  isSmallScreen
+                                                                      ? 15.sp
+                                                                      : 16.sp,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                              color:
+                                                                  _lightColor,
+                                                              letterSpacing:
+                                                                  1.5,
+                                                            ),
+                                                      ),
+                                                    ),
+                                                  );
+                                                },
+                                              ).animate().fadeIn(
+                                                duration: 900.ms,
+                                                delay: 300.ms,
+                                              ),
+                                            ),
+                                            GestureDetector(
+                                              onTap:
+                                                  _isNavigating
+                                                      ? null
+                                                      : () {
+                                                        HapticFeedback.lightImpact();
+                                                        _buttonAnimationController
+                                                            .forward(from: 0.0);
+                                                        if (_currentPage ==
+                                                            _onboardingData
+                                                                    .length -
+                                                                1) {
+                                                          _navigateToLogin();
+                                                        } else {
+                                                          _controller.nextPage(
+                                                            duration:
+                                                                const Duration(
+                                                                  milliseconds:
+                                                                      400,
                                                                 ),
-                                                              ),
-                                                              SizedBox(
-                                                                width: 8.w,
-                                                              ),
-                                                              Icon(
-                                                                _currentPage ==
-                                                                        _onboardingData.length -
-                                                                            1
-                                                                    ? Icons
-                                                                        .local_drink
-                                                                    : Icons
-                                                                        .arrow_forward,
-                                                                color:
-                                                                    _lightColor,
-                                                                size:
-                                                                    isSmallScreen
-                                                                        ? 16.sp
-                                                                        : 18.sp,
+                                                            curve:
+                                                                Curves
+                                                                    .easeOutQuint,
+                                                          );
+                                                        }
+                                                      },
+                                              child: AnimatedBuilder(
+                                                    animation:
+                                                        _buttonAnimationController,
+                                                    builder: (context, child) {
+                                                      return Transform.scale(
+                                                        scale:
+                                                            1.0 -
+                                                            (_buttonAnimationController
+                                                                    .value *
+                                                                0.05),
+                                                        child: Container(
+                                                          decoration: BoxDecoration(
+                                                            gradient: LinearGradient(
+                                                              colors: [
+                                                                _onboardingData[_currentPage]['bgColor'],
+                                                                _accentColor,
+                                                              ],
+                                                            ),
+                                                            borderRadius:
+                                                                BorderRadius.circular(
+                                                                  40.r,
+                                                                ),
+                                                            boxShadow: [
+                                                              BoxShadow(
+                                                                color: _onboardingData[_currentPage]['bgColor']
+                                                                    .withOpacity(
+                                                                      0.5,
+                                                                    ),
+                                                                blurRadius: 15,
+                                                                offset:
+                                                                    const Offset(
+                                                                      0,
+                                                                      5,
+                                                                    ),
                                                               ),
                                                             ],
                                                           ),
-                                                ),
-                                              );
-                                            },
-                                          ),
-                                        )
-                                        .animate()
-                                        .scale(
-                                          duration: 800.ms,
-                                          delay: 400.ms,
-                                          curve: Curves.easeOut,
-                                        )
-                                        .shimmer(
-                                          duration: 1800.ms,
-                                          delay: 1200.ms,
-                                          color: _lightColor.withOpacity(0.2),
-                                        )
-                                        .animate(
-                                          onPlay:
-                                              (controller) => controller.repeat(
-                                                reverse: true,
-                                              ),
-                                        )
-                                        .scale(
-                                          duration: 2000.ms,
-                                          begin: const Offset(1.0, 1.0),
-                                          end: const Offset(1.05, 1.05),
+                                                          padding: EdgeInsets.symmetric(
+                                                            horizontal:
+                                                                _currentPage ==
+                                                                        _onboardingData.length -
+                                                                            1
+                                                                    ? 35.w
+                                                                    : 28.w,
+                                                            vertical:
+                                                                isSmallScreen
+                                                                    ? 14.h
+                                                                    : 18.h,
+                                                          ),
+                                                          child:
+                                                              _isNavigating
+                                                                  ? SizedBox(
+                                                                    width: 24.w,
+                                                                    height:
+                                                                        24.h,
+                                                                    child: CircularProgressIndicator(
+                                                                      strokeWidth:
+                                                                          2.5,
+                                                                      valueColor:
+                                                                          AlwaysStoppedAnimation<
+                                                                            Color
+                                                                          >(
+                                                                            _lightColor,
+                                                                          ),
+                                                                    ),
+                                                                  )
+                                                                  : Row(
+                                                                    mainAxisSize:
+                                                                        MainAxisSize
+                                                                            .min,
+                                                                    children: [
+                                                                      Text(
+                                                                        _currentPage ==
+                                                                                _onboardingData.length -
+                                                                                    1
+                                                                            ? "START NOW"
+                                                                            : "NEXT",
+                                                                        style: GoogleFonts.poppins(
+                                                                          fontSize:
+                                                                              isSmallScreen
+                                                                                  ? 14.sp
+                                                                                  : 16.sp,
+                                                                          color:
+                                                                              _lightColor,
+                                                                          fontWeight:
+                                                                              FontWeight.w700,
+                                                                          letterSpacing:
+                                                                              1.5,
+                                                                        ),
+                                                                      ),
+                                                                      SizedBox(
+                                                                        width:
+                                                                            10.w,
+                                                                      ),
+                                                                      Icon(
+                                                                        _currentPage ==
+                                                                                _onboardingData.length -
+                                                                                    1
+                                                                            ? Icons.play_circle_fill
+                                                                            : Icons.arrow_forward_rounded,
+                                                                        color:
+                                                                            _lightColor,
+                                                                        size:
+                                                                            isSmallScreen
+                                                                                ? 18.sp
+                                                                                : 20.sp,
+                                                                      ),
+                                                                    ],
+                                                                  ),
+                                                        ),
+                                                      );
+                                                    },
+                                                  )
+                                                  .animate()
+                                                  .scale(
+                                                    duration: 900.ms,
+                                                    delay: 400.ms,
+                                                    curve: Curves.easeOut,
+                                                  )
+                                                  .animate(
+                                                    onPlay:
+                                                        (controller) =>
+                                                            controller.repeat(
+                                                              reverse: true,
+                                                            ),
+                                                  )
+                                                  .scale(
+                                                    duration: 1800.ms,
+                                                    begin: const Offset(
+                                                      1.0,
+                                                      1.0,
+                                                    ),
+                                                    end: const Offset(
+                                                      1.06,
+                                                      1.06,
+                                                    ),
+                                                  ),
+                                            ),
+                                          ],
                                         ),
-                                  ],
-                                ),
-                              ],
-                            ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
-                    ],
-                  ),
-                ),
-              );
-            },
+                    ),
+                  ],
+                );
+              },
+            ),
           ),
         );
       },
@@ -623,7 +608,7 @@ class _OnBoardingScreenState extends State<OnBoardingScreen>
 
   Widget _buildResponsivePage(
     BuildContext context, {
-    required String imagePath,
+    required String animationPath,
     required String title,
     required String subtitle,
     required String description,
@@ -631,16 +616,13 @@ class _OnBoardingScreenState extends State<OnBoardingScreen>
     required Color color,
     required bool isActive,
   }) {
-    // Get screen dimensions for responsive design
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenHeight < 700;
-
-    // Responsive padding and sizing
-    final horizontalPadding = screenWidth * 0.06;
-    final verticalPadding = screenHeight * 0.02;
+    final horizontalPadding = screenWidth * 0.08;
+    final verticalPadding = screenHeight * 0.03;
     final imageHeight =
-        isSmallScreen ? screenHeight * 0.25 : screenHeight * 0.3;
+        isSmallScreen ? screenHeight * 0.28 : screenHeight * 0.32;
 
     return Padding(
       padding: EdgeInsets.symmetric(
@@ -650,26 +632,22 @@ class _OnBoardingScreenState extends State<OnBoardingScreen>
       child: OrientationBuilder(
         builder: (context, orientation) {
           if (orientation == Orientation.landscape) {
-            // Landscape layout
             return Row(
               children: [
-                // Left side - Image
                 Expanded(
-                  flex: 5,
-                  child: _buildImageSection(
+                  flex: 4,
+                  child: _buildAnimationSection(
                     context,
-                    imagePath: imagePath,
+                    animationPath: animationPath,
                     iconData: iconData,
                     color: color,
                     isActive: isActive,
                   ),
                 ),
-
-                // Right side - Content
                 Expanded(
-                  flex: 6,
+                  flex: 5,
                   child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w),
+                    padding: EdgeInsets.symmetric(horizontal: 20.w),
                     child: _buildContentSection(
                       context,
                       title: title,
@@ -684,25 +662,20 @@ class _OnBoardingScreenState extends State<OnBoardingScreen>
               ],
             );
           } else {
-            // Portrait layout
             return SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Image with enhanced container
-                  _buildImageSection(
+                  _buildAnimationSection(
                     context,
-                    imagePath: imagePath,
+                    animationPath: animationPath,
                     iconData: iconData,
                     color: color,
                     isActive: isActive,
                     height: imageHeight,
                   ),
-
-                  SizedBox(height: isSmallScreen ? 20.h : 30.h),
-
-                  // Content section
+                  SizedBox(height: isSmallScreen ? 25.h : 35.h),
                   _buildContentSection(
                     context,
                     title: title,
@@ -721,74 +694,103 @@ class _OnBoardingScreenState extends State<OnBoardingScreen>
     );
   }
 
-  Widget _buildImageSection(
+  Widget _buildAnimationSection(
     BuildContext context, {
-    required String imagePath,
+    required String animationPath,
     required IconData iconData,
     required Color color,
     required bool isActive,
     double? height,
   }) {
     return Container(
-          height: height ?? 220.h,
+          height: height ?? 240.h,
           width: double.infinity,
           clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20.r),
+            borderRadius: BorderRadius.circular(24.r),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.2),
-                blurRadius: 15,
-                offset: const Offset(0, 8),
+                color: _darkAccentColor.withOpacity(0.3),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
               ),
             ],
           ),
           child: Stack(
             fit: StackFit.expand,
             children: [
-              // Hero image with parallax effect
-              Transform.scale(
-                scale: 1.1,
-                child: Image.asset(imagePath, fit: BoxFit.cover),
-              ),
-
-              // Gradient overlay for better text visibility
-              Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Colors.transparent,
-                      _secondaryColor.withOpacity(0.6),
-                    ],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
+              ClipRRect(
+                borderRadius: BorderRadius.circular(24.r),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          color.withOpacity(0.7),
+                          color.withOpacity(0.3),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(24.r),
+                      border: Border.all(
+                        color: _lightColor.withOpacity(0.25),
+                        width: 2,
+                      ),
+                    ),
                   ),
                 ),
               ),
-
-              // Animated water icon overlay
+              Transform.scale(
+                scale: 1.15,
+                child: Transform.translate(
+                  offset: Offset(_touchOffset.dx * 0.2, _touchOffset.dy * 0.2),
+                  child: Image.asset(
+                    animationPath,
+                    fit: BoxFit.contain,
+                    alignment: Alignment.center,
+                  ),
+                ),
+              ),
+              if (isActive)
+                CustomPaint(
+                  painter: ArcProgressPainter(
+                    progress: _arcAnimationController.value,
+                    color: color,
+                  ),
+                ),
               if (isActive)
                 Positioned(
-                  bottom: 20,
-                  right: 20,
+                  bottom: 25,
+                  right: 25,
                   child: Container(
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
-                          color: color.withOpacity(0.8),
+                          gradient: LinearGradient(
+                            colors: [color, _accentColor],
+                          ),
                           shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: color.withOpacity(0.6),
+                              blurRadius: 12,
+                              spreadRadius: 3,
+                            ),
+                          ],
                         ),
-                        child: Icon(iconData, color: Colors.white, size: 24),
+                        child: Icon(iconData, color: _lightColor, size: 28),
                       )
                       .animate()
-                      .scale(duration: 400.ms, curve: Curves.easeOutBack)
+                      .scale(duration: 500.ms, curve: Curves.easeOutBack)
                       .animate(
                         onPlay:
                             (controller) => controller.repeat(reverse: true),
                       )
                       .scale(
                         begin: const Offset(1.0, 1.0),
-                        end: const Offset(1.1, 1.1),
-                        duration: 1000.ms,
+                        end: const Offset(1.15, 1.15),
+                        duration: 1200.ms,
                       ),
                 ),
             ],
@@ -796,18 +798,17 @@ class _OnBoardingScreenState extends State<OnBoardingScreen>
         )
         .animate(target: isActive ? 1 : 0)
         .slideY(
-          duration: 800.ms,
-          begin: 0.2,
+          duration: 900.ms,
+          begin: 0.3,
           end: 0,
           curve: Curves.easeOutQuint,
-          delay: 100.ms,
         )
         .animate(
           onPlay:
               (controller) =>
-                  controller.repeat(period: const Duration(milliseconds: 3000)),
+                  controller.repeat(period: const Duration(milliseconds: 2500)),
         )
-        .shimmer(duration: 3000.ms, color: color.withOpacity(0.2));
+        .shimmer(duration: 2500.ms, color: _lightColor.withOpacity(0.3));
   }
 
   Widget _buildContentSection(
@@ -821,78 +822,307 @@ class _OnBoardingScreenState extends State<OnBoardingScreen>
   }) {
     return Column(
       children: [
-        // Title with accent bar
         Column(
               children: [
                 Container(
-                  width: 40.w,
-                  height: 4.h,
+                  width: 50.w,
+                  height: 5.h,
                   decoration: BoxDecoration(
-                    color: color,
-                    borderRadius: BorderRadius.circular(2.r),
+                    gradient: LinearGradient(colors: [color, _accentColor]),
+                    borderRadius: BorderRadius.circular(3.r),
+                    boxShadow: [
+                      BoxShadow(
+                        color: color.withOpacity(0.4),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
                   ),
                 ),
-                SizedBox(height: 16.h),
+                SizedBox(height: 20.h),
                 Text(
                   title,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: isSmallScreen ? 20.sp : 24.sp,
+                  style: GoogleFonts.poppins(
+                    fontSize: isSmallScreen ? 22.sp : 26.sp,
                     fontWeight: FontWeight.w800,
                     color: _lightColor,
-                    fontFamily: 'Montserrat',
-                    letterSpacing: 1.5,
+                    letterSpacing: 2.0,
+                    shadows: [
+                      Shadow(
+                        color: _darkAccentColor.withOpacity(0.3),
+                        blurRadius: 6,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
                   ),
                 ),
               ],
             )
             .animate(target: isActive ? 1 : 0)
-            .fadeIn(duration: 800.ms, delay: 200.ms)
-            .slideY(begin: 0.2, end: 0, duration: 800.ms),
-
-        SizedBox(height: 12.h),
-
-        // Subtitle with color animation
+            .fadeIn(duration: 900.ms, delay: 200.ms)
+            .slideY(begin: 0.3, end: 0, duration: 900.ms),
+        SizedBox(height: 15.h),
         Text(
               subtitle,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: isSmallScreen ? 16.sp : 18.sp,
+              style: GoogleFonts.poppins(
+                fontSize: isSmallScreen ? 17.sp : 19.sp,
                 fontWeight: FontWeight.w600,
-                color: color,
-                fontFamily: 'Montserrat',
-                letterSpacing: 0.5,
+                color: _accentColor,
+                letterSpacing: 0.8,
               ),
             )
             .animate(target: isActive ? 1 : 0)
-            .fadeIn(duration: 800.ms, delay: 300.ms)
-            .slideY(begin: 0.2, end: 0, duration: 800.ms),
-
-        SizedBox(height: 16.h),
-
-        // Description with typing animation
-        Text(
-              description,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: isSmallScreen ? 14.sp : 16.sp,
-                fontWeight: FontWeight.w400,
-                color: _lightColor.withOpacity(0.8),
-                fontFamily: 'Montserrat',
-                height: 1.6,
+            .fadeIn(duration: 900.ms, delay: 300.ms)
+            .slideY(begin: 0.3, end: 0, duration: 900.ms),
+        SizedBox(height: 20.h),
+        Container(
+              padding: EdgeInsets.symmetric(vertical: 18.h, horizontal: 12.w),
+              decoration: BoxDecoration(
+                color: _lightColor.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(20.r),
+                border: Border.all(
+                  color: _lightColor.withOpacity(0.15),
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: _darkAccentColor.withOpacity(0.2),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Text(
+                description,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(
+                  fontSize: isSmallScreen ? 15.sp : 16.sp,
+                  fontWeight: FontWeight.w400,
+                  color: _lightColor.withOpacity(0.95),
+                  height: 1.7,
+                  letterSpacing: 0.4,
+                ),
               ),
             )
             .animate(target: isActive ? 1 : 0)
-            .fadeIn(duration: 800.ms, delay: 400.ms)
-            .slideY(begin: 0.2, end: 0, duration: 800.ms)
+            .fadeIn(duration: 900.ms, delay: 400.ms)
+            .slideY(begin: 0.3, end: 0, duration: 900.ms)
             .animate(
               onPlay:
                   (controller) => controller.repeat(
-                    period: const Duration(milliseconds: 3000),
+                    period: const Duration(milliseconds: 2800),
                   ),
             )
-            .shimmer(duration: 3000.ms, color: color.withOpacity(0.2)),
+            .shimmer(duration: 2800.ms, color: _accentColor.withOpacity(0.25)),
       ],
     );
   }
+}
+
+// Arc progress painter for animation section
+class ArcProgressPainter extends CustomPainter {
+  final double progress;
+  final Color color;
+
+  ArcProgressPainter({required this.progress, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint =
+        Paint()
+          ..color = color.withOpacity(0.3)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 4
+          ..strokeCap = StrokeCap.round;
+
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = min(size.width, size.height) / 2 - 10;
+
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      -pi / 2,
+      2 * pi * progress,
+      false,
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(ArcProgressPainter oldDelegate) => true;
+}
+
+// Optimized water background painter
+class WaterBackgroundPainter extends CustomPainter {
+  final double animation;
+  final Color baseColor;
+
+  WaterBackgroundPainter({required this.animation, required this.baseColor});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint =
+        Paint()
+          ..color = baseColor.withOpacity(0.25)
+          ..style = PaintingStyle.fill;
+
+    final path = Path();
+    final height = size.height;
+    final width = size.width;
+
+    path.moveTo(0, height * 0.65);
+
+    for (double i = 0; i <= width; i += 4) {
+      path.lineTo(
+        i,
+        height * 0.65 + sin((i * 0.006) + animation * 2 * pi) * 18,
+      );
+    }
+
+    path.lineTo(width, height);
+    path.lineTo(0, height);
+    path.close();
+
+    canvas.drawPath(path, paint);
+
+    final paint2 =
+        Paint()
+          ..color = baseColor.withOpacity(0.15)
+          ..style = PaintingStyle.fill;
+
+    final path2 = Path();
+    path2.moveTo(0, height * 0.7);
+
+    for (double i = 0; i <= width; i += 4) {
+      path2.lineTo(
+        i,
+        height * 0.7 + sin((i * 0.005) + animation * 2 * pi + 1.2) * 22,
+      );
+    }
+
+    path2.lineTo(width, height);
+    path2.lineTo(0, height);
+    path2.close();
+
+    canvas.drawPath(path2, paint2);
+  }
+
+  @override
+  bool shouldRepaint(WaterBackgroundPainter oldDelegate) => true;
+}
+
+// Enhanced bubble animation
+class BubbleAnimation extends StatefulWidget {
+  final Color color;
+
+  const BubbleAnimation({super.key, required this.color});
+
+  @override
+  State<BubbleAnimation> createState() => _BubbleAnimationState();
+}
+
+class _BubbleAnimationState extends State<BubbleAnimation>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  final List<Map<String, dynamic>> bubbles = [];
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 8),
+    )..repeat();
+
+    final random = Random();
+    for (int i = 0; i < 12; i++) {
+      bubbles.add({
+        'position': Offset(
+          random.nextDouble() * 400,
+          random.nextDouble() * 800 + 100,
+        ),
+        'size': random.nextDouble() * 15 + 8,
+        'speed': random.nextDouble() * 1.8 + 1.2,
+        'delay': random.nextDouble() * 8,
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return CustomPaint(
+          painter: BubblePainter(
+            bubbles: bubbles,
+            animation: _controller.value,
+            color: widget.color,
+          ),
+          child: const SizedBox.expand(),
+        );
+      },
+    );
+  }
+}
+
+class BubblePainter extends CustomPainter {
+  final List<Map<String, dynamic>> bubbles;
+  final double animation;
+  final Color color;
+
+  BubblePainter({
+    required this.bubbles,
+    required this.animation,
+    required this.color,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    for (final bubble in bubbles) {
+      final position = bubble['position'] as Offset;
+      final bubbleSize = bubble['size'] as double;
+      final speed = bubble['speed'] as double;
+      final delay = bubble['delay'] as double;
+
+      final animatedPosition = Offset(
+        position.dx + sin(animation * 2 * pi + delay) * 15,
+        (position.dy - ((animation * 400 * speed) + (delay * 80))) %
+                (size.height + 200) -
+            100,
+      );
+
+      final paint =
+          Paint()
+            ..color = color.withOpacity(0.35)
+            ..style = PaintingStyle.fill;
+
+      canvas.drawCircle(animatedPosition, bubbleSize, paint);
+
+      final highlightPaint =
+          Paint()
+            ..color = Colors.white.withOpacity(0.5)
+            ..style = PaintingStyle.fill;
+
+      canvas.drawCircle(
+        Offset(
+          animatedPosition.dx - bubbleSize * 0.3,
+          animatedPosition.dy - bubbleSize * 0.3,
+        ),
+        bubbleSize * 0.3,
+        highlightPaint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(BubblePainter oldDelegate) => true;
 }
