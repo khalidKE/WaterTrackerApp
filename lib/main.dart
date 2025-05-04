@@ -12,7 +12,8 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   await NotificationService().init();
-
+  WidgetsFlutterBinding.ensureInitialized();
+  await NotificationService().init(); 
   final prefs = await SharedPreferences.getInstance();
   final isDarkMode = prefs.getBool('isDarkMode') ?? false;
 

@@ -226,9 +226,10 @@ class _WaterGoalCalculatorState extends State<WaterGoalCalculator> {
                           if (val != null) {
                             setState(() {
                               _isManualGoal = val;
-                              if (!val)
+                              if (!val) {
                                 _manualGoalController.text =
                                     _calculatedGoal.toString();
+                              }
                             });
                           }
                         },

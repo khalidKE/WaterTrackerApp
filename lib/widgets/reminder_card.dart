@@ -68,6 +68,7 @@ class ReminderCard extends StatelessWidget {
                         _buildReminderChip(context, 1, 'hour'),
                         _buildReminderChip(context, 2, 'hours'),
                         _buildReminderChip(context, 4, 'hours'),
+                        _buildCustomReminderChip(context),
                       ],
                     ),
                   ),
@@ -116,6 +117,98 @@ class ReminderCard extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+
+  Widget _buildCustomReminderChip(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    return Padding(
+      padding: const EdgeInsets.only(right: 8.0),
+      child: ActionChip(
+        avatar: Icon(
+          Icons.add_alarm,
+          size: 16,
+          color: Theme.of(context).colorScheme.secondary,
+        ),
+        label: const Text('Custom'),
+        backgroundColor:
+            isDarkMode
+                ? Theme.of(context).colorScheme.surface.withOpacity(0.8)
+                : Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+        labelStyle: TextStyle(
+          color: Theme.of(context).colorScheme.secondary,
+          fontWeight: FontWeight.bold,
+        ),
+        onPressed: () {
+          _showCustomReminderDialog(context);
+        },
+      ),
+    );
+  }
+
+  void _showCustomReminderDialog(BuildContext context) {
+    final TextEditingController controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(
+            'Custom Reminder',
+            style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+          ),
+          content: TextField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(
+              labelText: 'Enter minutes',
+              hintText: 'e.g., 45',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                final input = controller.text;
+                final minutes = int.tryParse(input);
+                if (minutes != null && minutes > 0) {
+                  NotificationService().scheduleReminderIn(minutes);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Reminder set for $minutes minutes from now',
+                      ),
+                      duration: const Duration(seconds: 2),
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  );
+                  Navigator.of(context).pop();
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Please enter a valid positive number'),
+                      duration: Duration(seconds: 2),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              },
+              child: const Text('Set'),
+            ),
+          ],
+        );
+      },
     );
   }
 }
