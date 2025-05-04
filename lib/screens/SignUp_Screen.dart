@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:water_tracker/MainScreen.dart';
 import 'login_screen.dart';
 
@@ -49,7 +50,12 @@ class _SignupScreenState extends State<SignupScreen>
   }
 
   Future<void> _signup() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      setState(() {
+        _errorMessage = 'Please correct the errors in the form';
+      });
+      return;
+    }
 
     // Apply haptic feedback for interaction
     HapticFeedback.mediumImpact();
@@ -60,29 +66,15 @@ class _SignupScreenState extends State<SignupScreen>
     });
 
     try {
-      // Simulating a delay for registration
-      await Future.delayed(const Duration(seconds: 2));
-
-      // Replace with your actual registration logic
-      // For example:
-      // await FirebaseAuth.instance.createUserWithEmailAndPassword(
-      //   email: _emailController.text.trim(),
-      //   password: _passwordController.text.trim(),
-      // );
-
-      // Create user profile with additional data
-      // final user = FirebaseAuth.instance.currentUser;
-      // await FirebaseFirestore.instance.collection('users').doc(user!.uid).set({
-      //   'name': _nameController.text.trim(),
-      //   'email': _emailController.text.trim(),
-      //   'gender': _selectedGender,
-      //   'weight': double.tryParse(_weightController.text) ?? 0.0,
-      //   'weightUnit': _weightUnit,
-      //   'createdAt': DateTime.now(),
-      // });
+      // Firebase authentication
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
 
       if (mounted) {
-        Navigator.pushReplacement(
+        // Prevent back navigation to signup
+        Navigator.pushAndRemoveUntil(
           context,
           PageRouteBuilder(
             pageBuilder:
@@ -97,11 +89,21 @@ class _SignupScreenState extends State<SignupScreen>
             },
             transitionDuration: const Duration(milliseconds: 500),
           ),
+          (route) => false,
         );
       }
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        _errorMessage =
+            e.code == 'email-already-in-use'
+                ? 'This email is already registered.'
+                : e.code == 'weak-password'
+                ? 'Password is too weak.'
+                : e.message ?? 'Failed to create account.';
+      });
     } catch (e) {
       setState(() {
-        _errorMessage = 'Failed to create account. Please try again.';
+        _errorMessage = 'An unexpected error occurred.';
       });
     } finally {
       setState(() {
@@ -175,7 +177,7 @@ class _SignupScreenState extends State<SignupScreen>
                               ],
                             ),
                           ),
-                        
+
                           SizedBox(width: 5),
                           Icon(
                             Icons.water_drop_rounded,
@@ -405,8 +407,6 @@ class _SignupScreenState extends State<SignupScreen>
                                   return null;
                                 },
                               ),
-
-                              const SizedBox(height: 20),
 
                               const SizedBox(height: 24),
 
