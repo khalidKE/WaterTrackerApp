@@ -4,9 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:water_tracker/screens/onboard.dart';
+import 'package:water_tracker/screens/login_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class IntroductionScreen extends StatefulWidget {
-  const IntroductionScreen({super.key});
+  final bool skipToLogin;
+
+  const IntroductionScreen({super.key, this.skipToLogin = false});
 
   @override
   State<IntroductionScreen> createState() => _IntroductionScreenState();
@@ -33,23 +37,59 @@ class _IntroductionScreenState extends State<IntroductionScreen>
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
 
-    // Navigate to onboarding after splash or on tap
+    // Navigate to appropriate screen after splash or on tap
     Timer(const Duration(seconds: 2), () {
       if (mounted && !_isTapped) {
-        _navigateToOnboarding();
+        if (widget.skipToLogin) {
+          _navigateToLogin();
+        } else {
+          _navigateToOnboarding();
+        }
       }
     });
   }
 
-  void _navigateToOnboarding() {
+  void _navigateToOnboarding() async {
     if (!_isTapped) {
       _isTapped = true;
+
+      // Mark that onboarding has been shown
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('hasCompletedOnboarding', true);
+
+      if (!mounted) return;
+
       Navigator.pushReplacement(
         context,
         PageRouteBuilder(
           pageBuilder:
               (context, animation, secondaryAnimation) =>
                   const OnBoardingScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            const begin = Offset(1.0, 0.0);
+            const end = Offset.zero;
+            const curve = Curves.easeInOut;
+            var tween = Tween(
+              begin: begin,
+              end: end,
+            ).chain(CurveTween(curve: curve));
+            var offsetAnimation = animation.drive(tween);
+            return SlideTransition(position: offsetAnimation, child: child);
+          },
+          transitionDuration: const Duration(milliseconds: 600),
+        ),
+      );
+    }
+  }
+
+  void _navigateToLogin() {
+    if (!_isTapped) {
+      _isTapped = true;
+      Navigator.pushReplacement(
+        context,
+        PageRouteBuilder(
+          pageBuilder:
+              (context, animation, secondaryAnimation) => const LoginScreen(),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             const begin = Offset(1.0, 0.0);
             const end = Offset.zero;
@@ -81,7 +121,7 @@ class _IntroductionScreenState extends State<IntroductionScreen>
       splitScreenMode: true,
       builder: (context, child) {
         return GestureDetector(
-          onTap: _navigateToOnboarding,
+          onTap: widget.skipToLogin ? _navigateToLogin : _navigateToOnboarding,
           onPanUpdate: (details) {
             setState(() {
               _logoOffset = Offset(
@@ -236,7 +276,9 @@ class _IntroductionScreenState extends State<IntroductionScreen>
                               SizedBox(height: 15.h),
 
                               Text(
-                                    "Tap to Start",
+                                    widget.skipToLogin
+                                        ? "Tap to Login"
+                                        : "Tap to Start",
                                     style: TextStyle(
                                       color: Colors.white.withOpacity(0.7),
                                       fontSize: 14.sp,
@@ -265,7 +307,7 @@ class _IntroductionScreenState extends State<IntroductionScreen>
   }
 }
 
-// Optimized wave painter
+// Existing classes remain unchanged
 class WavePainter extends CustomPainter {
   final double waveAnimation;
   final Color waveColor;
@@ -321,7 +363,6 @@ class WavePainter extends CustomPainter {
   bool shouldRepaint(WavePainter oldDelegate) => true;
 }
 
-// New particle animation for water droplets
 class ParticleAnimation extends StatefulWidget {
   final Color color;
   final int particleCount;
@@ -424,7 +465,6 @@ class ParticlePainter extends CustomPainter {
   bool shouldRepaint(ParticlePainter oldDelegate) => true;
 }
 
-// Optimized bubble animation
 class BubbleAnimation extends StatefulWidget {
   final Color color;
   final int bubbleCount;

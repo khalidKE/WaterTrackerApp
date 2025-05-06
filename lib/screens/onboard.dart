@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'login_screen.dart';
 
 class OnBoardingScreen extends StatefulWidget {
@@ -125,6 +126,10 @@ class _OnBoardingScreenState extends State<OnBoardingScreen>
 
     setState(() => _isNavigating = true);
     HapticFeedback.mediumImpact();
+
+    // Mark that onboarding has been completed
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('hasCompletedOnboarding', true);
 
     await Future.delayed(const Duration(milliseconds: 200));
 
@@ -877,119 +882,4 @@ class WaterBackgroundPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(WaterBackgroundPainter oldDelegate) => true;
-}
-
-// Enhanced bubble animation
-class BubbleAnimation extends StatefulWidget {
-  final Color color;
-
-  const BubbleAnimation({super.key, required this.color});
-
-  @override
-  State<BubbleAnimation> createState() => _BubbleAnimationState();
-}
-
-class _BubbleAnimationState extends State<BubbleAnimation>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  final List<Map<String, dynamic>> bubbles = [];
-
-  @override
-  void initState() {
-    super.initState();
-
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 8),
-    )..repeat();
-
-    final random = Random();
-    for (int i = 0; i < 12; i++) {
-      bubbles.add({
-        'position': Offset(
-          random.nextDouble() * 400,
-          random.nextDouble() * 800 + 100,
-        ),
-        'size': random.nextDouble() * 15 + 8,
-        'speed': random.nextDouble() * 1.8 + 1.2,
-        'delay': random.nextDouble() * 8,
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return CustomPaint(
-          painter: BubblePainter(
-            bubbles: bubbles,
-            animation: _controller.value,
-            color: widget.color,
-          ),
-          child: const SizedBox.expand(),
-        );
-      },
-    );
-  }
-}
-
-class BubblePainter extends CustomPainter {
-  final List<Map<String, dynamic>> bubbles;
-  final double animation;
-  final Color color;
-
-  BubblePainter({
-    required this.bubbles,
-    required this.animation,
-    required this.color,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    for (final bubble in bubbles) {
-      final position = bubble['position'] as Offset;
-      final bubbleSize = bubble['size'] as double;
-      final speed = bubble['speed'] as double;
-      final delay = bubble['delay'] as double;
-
-      final animatedPosition = Offset(
-        position.dx + sin(animation * 2 * pi + delay) * 15,
-        (position.dy - ((animation * 400 * speed) + (delay * 80))) %
-                (size.height + 200) -
-            100,
-      );
-
-      final paint =
-          Paint()
-            ..color = color.withOpacity(0.35)
-            ..style = PaintingStyle.fill;
-
-      canvas.drawCircle(animatedPosition, bubbleSize, paint);
-
-      final highlightPaint =
-          Paint()
-            ..color = Colors.white.withOpacity(0.5)
-            ..style = PaintingStyle.fill;
-
-      canvas.drawCircle(
-        Offset(
-          animatedPosition.dx - bubbleSize * 0.3,
-          animatedPosition.dy - bubbleSize * 0.3,
-        ),
-        bubbleSize * 0.3,
-        highlightPaint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(BubblePainter oldDelegate) => true;
 }

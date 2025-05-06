@@ -464,7 +464,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                                             leftTitles: AxisTitles(
                                               sideTitles: SideTitles(
                                                 showTitles: true,
-                                                interval: 500,
+                                                interval: 200,
                                                 getTitlesWidget: (
                                                   double value,
                                                   TitleMeta meta,
@@ -498,7 +498,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                                           gridData: FlGridData(
                                             show: true,
                                             drawVerticalLine: false,
-                                            horizontalInterval: 500,
+                                            horizontalInterval: 200,
                                             getDrawingHorizontalLine: (value) {
                                               return FlLine(
                                                 color: Colors.grey.withOpacity(
@@ -753,7 +753,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
 
           SizedBox(height: isTablet ? 16 : 12),
 
-          // FIXED: Bar chart with proper y-axis labels
+          // FIXED: Bar chart with proper y-axis labels and scaling
           FadeInUp(
             delay: const Duration(milliseconds: 500),
             controller: (controller) => _animationController,
@@ -800,11 +800,11 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                                     reservedSize: isTablet ? 36 : 32,
                                   ),
                                 ),
-                                // FIXED: Proper y-axis labels with better spacing
+                                // FIXED: Proper y-axis labels with better spacing and interval
                                 leftTitles: AxisTitles(
                                   sideTitles: SideTitles(
                                     showTitles: true,
-                                    interval: 500,
+                                    interval: 200,
                                     getTitlesWidget: (
                                       double value,
                                       TitleMeta meta,
@@ -836,7 +836,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                               gridData: FlGridData(
                                 show: true,
                                 drawVerticalLine: false,
-                                horizontalInterval: 560,
+                                horizontalInterval: 200,
                                 getDrawingHorizontalLine: (value) {
                                   return FlLine(
                                     color: Colors.grey.withOpacity(0.2),
@@ -1838,7 +1838,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                                                     meta: meta,
                                                     space: 6,
                                                     child: Text(
-                                                      '${value.toInt()}',
+                                                      '${value.toInt()} ml',
                                                       style:
                                                           GoogleFonts.poppins(
                                                             fontSize: 10,
@@ -2741,10 +2741,12 @@ class _StatisticsScreenState extends State<StatisticsScreen>
     return groups;
   }
 
+  // FIXED: Modified to calculate a more appropriate max value based on actual data
   double _getMaxHourlyConsumption(Map<int, int> hourlyConsumption) {
     if (hourlyConsumption.isEmpty) return 500;
     final maxAmount = hourlyConsumption.values.reduce((a, b) => a > b ? a : b);
-    return (maxAmount + 100).toDouble();
+    // Add 20% padding to the max value for better visualization
+    return (maxAmount * 1.2).ceilToDouble();
   }
 
   List<BarChartGroupData> _buildWeeklyBarGroups(
