@@ -7,13 +7,29 @@ import 'package:water_tracker/providers/theme_provider.dart';
 import 'package:water_tracker/screens/Splash_Screen.dart';
 import 'package:water_tracker/services/notification_service.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter/services.dart';
 
 Future<void> main() async {
+  // Ensure Flutter is initialized
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase
   await Firebase.initializeApp();
-  await NotificationService().init();
-  WidgetsFlutterBinding.ensureInitialized();
-  await NotificationService().init(); 
+
+  // Initialize notification service (only once)
+  final notificationService = NotificationService();
+  await notificationService.init();
+
+  // Request notification permissions
+  await notificationService.requestPermissions();
+
+  // Set preferred orientations
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+
+  // Get theme preference
   final prefs = await SharedPreferences.getInstance();
   final isDarkMode = prefs.getBool('isDarkMode') ?? false;
 
@@ -82,4 +98,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-

@@ -6,6 +6,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:water_tracker/screens/SignUp_Screen.dart';
 import 'package:water_tracker/screens/profile_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:water_tracker/widgets/test.dart';
 import '../providers/theme_provider.dart';
 import '../providers/water_provider.dart';
 import '../services/notification_service.dart';
@@ -218,29 +219,44 @@ class SettingsScreen extends StatelessWidget {
                       context,
                       child: Consumer<WaterProvider>(
                         builder: (context, waterProvider, child) {
-                          return SwitchListTile(
-                            title: const Text(
-                              'Reminder Notifications',
-                              style: TextStyle(fontWeight: FontWeight.w600),
-                            ),
-                            subtitle: const Text(
-                              'Receive timely reminders to stay hydrated',
-                            ),
-                            value: waterProvider.remindersEnabled,
-                            activeColor: _getIconColor(context),
-                            onChanged: (value) {
-                              HapticFeedback.lightImpact();
-                              waterProvider.setRemindersEnabled(value);
-                              if (value) {
-                                NotificationService().scheduleReminders();
-                              } else {
-                                NotificationService().cancelAllNotifications();
-                              }
-                            },
-                            secondary: Icon(
-                              MdiIcons.clockOutline,
-                              color: _getIconColor(context),
-                            ),
+                          return Column(
+                            children: [
+                              SwitchListTile(
+                                title: const Text(
+                                  'Reminder Notifications',
+                                  style: TextStyle(fontWeight: FontWeight.w600),
+                                ),
+                                subtitle: const Text(
+                                  'Receive timely reminders to stay hydrated',
+                                ),
+                                value: waterProvider.remindersEnabled,
+                                activeColor: _getIconColor(context),
+                                onChanged: (value) {
+                                  HapticFeedback.lightImpact();
+                                  waterProvider.setRemindersEnabled(value);
+                                  if (value) {
+                                    NotificationService().scheduleReminders();
+                                  } else {
+                                    NotificationService()
+                                        .cancelAllNotifications();
+                                  }
+                                },
+                                secondary: Icon(
+                                  MdiIcons.clockOutline,
+                                  color: _getIconColor(context),
+                                ),
+                              ),
+                              // Add a divider between the switch and the test button
+                              const Divider(),
+                              // Add the test notification button
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16.0,
+                                  vertical: 8.0,
+                                ),
+                                child: Center(child: TestNotificationButton()),
+                              ),
+                            ],
                           );
                         },
                       ),

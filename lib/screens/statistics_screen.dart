@@ -498,7 +498,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                                           gridData: FlGridData(
                                             show: true,
                                             drawVerticalLine: false,
-                                            horizontalInterval: 200,
+                                            horizontalInterval: 500,
                                             getDrawingHorizontalLine: (value) {
                                               return FlLine(
                                                 color: Colors.grey.withOpacity(
@@ -836,7 +836,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                               gridData: FlGridData(
                                 show: true,
                                 drawVerticalLine: false,
-                                horizontalInterval: 200,
+                                horizontalInterval: 560,
                                 getDrawingHorizontalLine: (value) {
                                   return FlLine(
                                     color: Colors.grey.withOpacity(0.2),

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
@@ -27,7 +28,7 @@ class NotificationService {
       // Initialize timezone
       tz_init.initializeTimeZones();
 
-      // Android initialization
+      // Android initialization with icon and channel details
       const AndroidInitializationSettings initializationSettingsAndroid =
           AndroidInitializationSettings('@mipmap/ic_launcher');
 
@@ -45,23 +46,75 @@ class NotificationService {
             iOS: initializationSettingsIOS,
           );
 
+      // Initialize the plugin and set up notification click handling
       await flutterLocalNotificationsPlugin.initialize(
         initializationSettings,
         onDidReceiveNotificationResponse: (NotificationResponse response) {
           debugPrint('Notification clicked: ${response.payload}');
+          // You can add navigation logic here if needed
         },
       );
 
+      // Create notification channel for Android
+      if (Platform.isAndroid) {
+        await _createNotificationChannel();
+      }
+
       // Request permissions for iOS
-      await flutterLocalNotificationsPlugin
-          .resolvePlatformSpecificImplementation<
-            IOSFlutterLocalNotificationsPlugin
-          >()
-          ?.requestPermissions(alert: true, badge: true, sound: true);
+      if (Platform.isIOS) {
+        await flutterLocalNotificationsPlugin
+            .resolvePlatformSpecificImplementation<
+              IOSFlutterLocalNotificationsPlugin
+            >()
+            ?.requestPermissions(alert: true, badge: true, sound: true);
+      }
 
       debugPrint('Notification service initialized successfully');
     } catch (e) {
       debugPrint('Error initializing notifications: $e');
+    }
+  }
+
+  // Create notification channel for Android
+  Future<void> _createNotificationChannel() async {
+    const AndroidNotificationChannel channel = AndroidNotificationChannel(
+      'water_tracker_channel',
+      'Water Tracker Notifications',
+      description: 'Notifications for water tracking reminders',
+      importance: Importance.high,
+      playSound: true,
+      enableVibration: true,
+      enableLights: true,
+    );
+
+    await flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >()
+        ?.createNotificationChannel(channel);
+  }
+
+  // Request notification permissions - removed Android permission request
+  Future<void> requestPermissions() async {
+    try {
+      if (Platform.isIOS) {
+        final IOSFlutterLocalNotificationsPlugin? iosImplementation =
+            flutterLocalNotificationsPlugin
+                .resolvePlatformSpecificImplementation<
+                  IOSFlutterLocalNotificationsPlugin
+                >();
+
+        final bool? granted = await iosImplementation?.requestPermissions(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
+        debugPrint('iOS notification permission granted: $granted');
+      }
+      // For Android, permissions are handled in the AndroidManifest.xml
+      // and through system settings
+    } catch (e) {
+      debugPrint('Error requesting notification permissions: $e');
     }
   }
 
@@ -83,12 +136,15 @@ class NotificationService {
             icon: '@mipmap/ic_launcher',
             playSound: true,
             enableVibration: true,
+            fullScreenIntent: true,
+            category: AndroidNotificationCategory.reminder,
           );
 
       const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
         presentAlert: true,
         presentBadge: true,
         presentSound: true,
+        interruptionLevel: InterruptionLevel.active,
       );
 
       const NotificationDetails notificationDetails = NotificationDetails(
@@ -137,11 +193,17 @@ class NotificationService {
             importance: Importance.high,
             priority: Priority.high,
             icon: '@mipmap/ic_launcher',
+            playSound: true,
+            enableVibration: true,
+            fullScreenIntent: true,
+            category: AndroidNotificationCategory.reminder,
           );
 
       const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
         presentAlert: true,
         presentSound: true,
+        presentBadge: true,
+        interruptionLevel: InterruptionLevel.active,
       );
 
       const NotificationDetails notificationDetails = NotificationDetails(
@@ -156,6 +218,7 @@ class NotificationService {
         tz.TZDateTime.from(scheduledDate, tz.local),
         notificationDetails,
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        // Removed uiLocalNotificationDateInterpretation parameter
         payload: payload,
       );
 
@@ -325,39 +388,6 @@ class NotificationService {
     } catch (e) {
       debugPrint('Error checking notification permissions: $e');
       return false;
-    }
-  }
-
-  // Request notification permissions
-  Future<void> requestPermissions() async {
-    try {
-      final androidImplementation =
-          flutterLocalNotificationsPlugin
-              .resolvePlatformSpecificImplementation<
-                AndroidFlutterLocalNotificationsPlugin
-              >();
-
-      if (androidImplementation != null) {
-        await androidImplementation.requestNotificationsPermission();
-      }
-
-      final iosImplementation =
-          flutterLocalNotificationsPlugin
-              .resolvePlatformSpecificImplementation<
-                IOSFlutterLocalNotificationsPlugin
-              >();
-
-      if (iosImplementation != null) {
-        await iosImplementation.requestPermissions(
-          alert: true,
-          badge: true,
-          sound: true,
-        );
-      }
-
-      debugPrint('Notification permissions requested');
-    } catch (e) {
-      debugPrint('Error requesting notification permissions: $e');
     }
   }
 }
