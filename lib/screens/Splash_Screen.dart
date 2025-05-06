@@ -24,7 +24,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _checkAuthState() async {
     // Wait a bit to allow the splash animation to play
-    await Future.delayed(const Duration(milliseconds: 1500));
+    await Future.delayed(const Duration(milliseconds: 2000));
 
     if (!mounted) return;
 

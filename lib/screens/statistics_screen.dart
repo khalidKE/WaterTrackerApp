@@ -464,7 +464,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                                             leftTitles: AxisTitles(
                                               sideTitles: SideTitles(
                                                 showTitles: true,
-                                                interval: 200,
+                                                interval: 500,
                                                 getTitlesWidget: (
                                                   double value,
                                                   TitleMeta meta,
@@ -498,7 +498,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                                           gridData: FlGridData(
                                             show: true,
                                             drawVerticalLine: false,
-                                            horizontalInterval: 200,
+                                            horizontalInterval: 500,
                                             getDrawingHorizontalLine: (value) {
                                               return FlLine(
                                                 color: Colors.grey.withOpacity(
@@ -804,7 +804,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                                 leftTitles: AxisTitles(
                                   sideTitles: SideTitles(
                                     showTitles: true,
-                                    interval: 200,
+                                    interval: 500,
                                     getTitlesWidget: (
                                       double value,
                                       TitleMeta meta,
@@ -836,7 +836,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                               gridData: FlGridData(
                                 show: true,
                                 drawVerticalLine: false,
-                                horizontalInterval: 200,
+                                horizontalInterval: 500,
                                 getDrawingHorizontalLine: (value) {
                                   return FlLine(
                                     color: Colors.grey.withOpacity(0.2),
@@ -2746,7 +2746,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
     if (hourlyConsumption.isEmpty) return 500;
     final maxAmount = hourlyConsumption.values.reduce((a, b) => a > b ? a : b);
     // Add 20% padding to the max value for better visualization
-    return (maxAmount * 1.2).ceilToDouble();
+    return (maxAmount).ceilToDouble();
   }
 
   List<BarChartGroupData> _buildWeeklyBarGroups(
